@@ -16,6 +16,22 @@ This library provides tools for managing media content, with features for video 
 
 ## Installation
 
+### Install [namer](https://github.com/ThePornDatabase/namer) 
+
+```bash
+pip install namer
+```
+Fill your PornDB API into `.namer.cfg`.
+
+### Install [ImageMagick](https://imagemagick.org/script/download.php)
+
+Download the installer and install.
+
+### Install [whisper.cpp](https://github.com/ggerganov/whisper.cpp)
+
+Compile the code based on your inference hardware.
+
+### Install `explicit_util`
 ```bash
 git clone https://github.com/Alchemist-Aloha/explicit_util.git
 cd explicit_util
