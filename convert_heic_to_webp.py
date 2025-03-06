@@ -5,8 +5,12 @@ from PIL import Image
 import threading
 from tqdm import tqdm
 
-def convert_single_heic(heic_path, failed_count, timeout=10, progress_bar=None):
-    """Converts a single HEIC file to WebP with a timeout."""
+def convert_single_heic(heic_path:Path, failed_count:dict, timeout:int=10, progress_bar:bool=None) -> None:
+    """Converts a single HEIC file to WebP with a timeout.
+    Args:
+        heic_path (Path): Path to the HEIC file.
+        failed_count (dict): Dictionary to count failed conversions.
+        timeout (int): Timeout in seconds"""
     webp_path = heic_path.with_suffix(".webp")
 
     try:
@@ -59,9 +63,13 @@ def convert_single_heic(heic_path, failed_count, timeout=10, progress_bar=None):
         if progress_bar:
             progress_bar.update(1)
 
-def convert_heic_to_webp_multithreaded(folder_path, num_threads=4, timeout=10):
+def convert_heic_to_webp_multithreaded(folder_path:Path,num_threads:int=4, timeout:int=10) -> None:
     """
     Converts HEIC files to WebP using ImageMagick with multithreading, and counts failures.
+    Args:
+        folder_path (Path): Path to the folder containing HEIC files.
+        num_threads (int): Number of threads to use.
+        timeout (int): Timeout in seconds for each conversion.
     """
     folder = Path(folder_path)
     heic_files = list(folder.rglob("*.heic"))+list(folder.rglob("*.HEIC"))+list(folder.rglob("*.jpg"))+list(folder.rglob("*.JPEG"))+list(folder.rglob("*.JPG"))+list(folder.rglob("*.jpeg"))
