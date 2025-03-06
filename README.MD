@@ -8,7 +8,7 @@ This library provides tools for managing media content, with features for video 
 
 ## Features
 
-- Convert HEIC images to WebP format
+- Batch convert images to WebP format
 - Transcribe videos using whisper.cpp
 - Recursively rename video files using namer
 - Zip and archive content with backup functionality
