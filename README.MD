@@ -17,24 +17,14 @@ This library provides tools for managing media content, with features for video 
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/explicit_util.git
+git clone https://github.com/Alchemist-Aloha/explicit_util.git
 cd explicit_util
 pip install -e .
-# or
-poetry add explicit-util
 ```
 
 ## Usage
 
-```python
-import explicit_util
-
-# Example content analysis
-result = explicit_util.analyze(content)
-if result.is_sensitive:
-    # Handle accordingly
-    pass
-```
+See `explicit_util_examples.ipynb`
 
 ## License
 
