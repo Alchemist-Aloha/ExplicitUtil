@@ -1,4 +1,3 @@
-import os
 import subprocess
 from pathlib import Path
 from PIL import Image
@@ -63,11 +62,11 @@ def convert_single_heic(heic_path:Path, failed_count:dict, timeout:int=10, progr
         if progress_bar:
             progress_bar.update(1)
 
-def convert_heic_to_webp_multithreaded(folder_path:Path,num_threads:int=4, timeout:int=10) -> None:
+def convert_heic_to_webp_multithreaded(folder_path:str,num_threads:int=4, timeout:int=10) -> None:
     """
     Converts HEIC files to WebP using ImageMagick with multithreading, and counts failures.
     Args:
-        folder_path (Path): Path to the folder containing HEIC files.
+        folder_path (str): Path to the folder containing HEIC files.
         num_threads (int): Number of threads to use.
         timeout (int): Timeout in seconds for each conversion.
     """

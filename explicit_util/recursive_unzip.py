@@ -3,7 +3,7 @@ import zipfile
 import argparse
 from pathlib import Path
 
-def recursive_unzip(folder_path: Path, delete_zips: bool = False) -> None:
+def recursive_unzip(folder_path: str, delete_zips: bool = False) -> None:
     """
     Unzips each ZIP archive in a folder and its subfolders into a separate folder
     named after the archive.
@@ -12,6 +12,7 @@ def recursive_unzip(folder_path: Path, delete_zips: bool = False) -> None:
         folder_path (str or Path): The path to the folder containing ZIP archives.
         delete_zips (bool, optional): Whether to delete the ZIP archives after unzipping. Defaults to False.
     """
+    folder_path = Path(folder_path)
     if not folder_path.exists():
         print(f"Error: Folder '{folder_path}' does not exist.")
         return

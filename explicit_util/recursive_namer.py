@@ -2,17 +2,18 @@ from pathlib import Path
 import subprocess
 
 
-def process_video_files(root_dir:Path, namer_config:str=".namer.cfg", suffix:tuple[str]=(".m4v", ".mp4"),endswith:tuple[str]=("")) -> None: 
+def process_video_files(root_dir:str, namer_config:str=".namer.cfg", suffix:tuple[str]=(".m4v", ".mp4"),endswith:tuple[str]=("")) -> None: 
     """
     Recursively finds and processes .m4v and .mp4 files in subfolders of root_dir.
 
     Args:
-        root_dir (Path): The starting directory.
+        root_dir (str): The starting directory.
         namer_config (str): Path to the namer configuration file.
         suffix (tuple): Tuple of file extensions to process.
         endswith (tuple): Tuple of suffixes to check for in the file name.
     """
-    if not root_dir.is_dir():
+    root_dir = Path(root_dir)  # Ensure root_dir is a Path object
+    if not root_dir.exists():
         print(f"Error: Directory '{root_dir}' not found.")
         return
 

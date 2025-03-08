@@ -42,12 +42,17 @@ def compute_checksum(file_path: Path) -> str:
             sha256.update(chunk)
     return sha256.hexdigest()
 
-def zip_and_move(source_folder:Path, destination_folder:Path) -> None:
+def zip_and_move(source_folder:str, destination_folder:str) -> None:
     """Zip leaf directories and move them to the destination folder.
     Args:
-        source_folder (Path): The source directory containing folders to zip.
-        destination_folder (Path): The destination directory where zipped folders will be moved.
+        source_folder (Path or str): The source directory containing folders to zip.
+        destination_folder (Path or str): The destination directory where zipped folders will be moved.
     """
+    source_folder = Path(source_folder)
+    destination_folder = Path(destination_folder)
+    if not source_folder.is_dir() or not destination_folder.is_dir():
+        print(f"Either '{source_folder}' or '{destination_folder}' is not a valid directory.")
+        return
     for folder in source_folder.rglob("*"):
         if is_leaf_directory(folder):
             # Create relative path for preserving structure

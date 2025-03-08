@@ -1,10 +1,15 @@
-import os
+
 import xml.etree.ElementTree as ET
-from datetime import datetime
 from pathlib import Path
 import re
 
-def process_single_file(file_path, media_type, output_path):
+def process_single_file(file_path:Path, media_type:str, output_path:Path) -> None:
+    """Processes a single media file to generate or update its .nfo file.
+    Args:
+        file_path (Path): Path to the media file.
+        media_type (str): Type of media (movie, episode, musicvideo).
+        output_path (Path): Directory to save the generated .nfo file.
+    """
     base_name = file_path.stem
     nfo_filename = output_path / f"{base_name}.nfo"
     date = detect_date_in_name(base_name)
@@ -24,7 +29,7 @@ def process_single_file(file_path, media_type, output_path):
         else:
             create_movie_nfo(str(nfo_filename), base_name, date)
 
-def generate_nfo(media_path, media_type, output_dir="nfo_files"):
+def generate_nfo(media_path:str, media_type:str, output_dir:str) -> None:
     """
     Generates .nfo files for media in a given directory and subdirectories.
 
@@ -63,8 +68,13 @@ def generate_nfo(media_path, media_type, output_dir="nfo_files"):
     else:
         print("Invalid media type.")
 
-def detect_date_in_name(name):
-    """Detects a date in the file name and returns it in YYYY-MM-DD format."""
+def detect_date_in_name(name:str) -> str:
+    """Detects a date in the file name and returns it in YYYY-MM-DD format.
+    Args:
+        name (str): The file name to search for a date.
+        Returns:
+            str: The detected date in YYYY-MM-DD format, or None if no date is found.
+    """
     date_patterns = [
         r"(\d{4})[-_.](\d{2})[-_.](\d{2})",  # YYYY-MM-DD or YYYY_MM_DD or YYYY.MM.DD
         r"(\d{2})[-_.](\d{2})[-_.](\d{4})",   # DD-MM-YYYY or DD_MM_YYYY or DD.MM.YYYY
@@ -84,8 +94,13 @@ def detect_date_in_name(name):
                     return f"{year}-{month}-{day}"
     return None
 
-def create_movie_nfo(nfo_filename, title, date=None):
-    """Creates a basic movie .nfo file."""
+def create_movie_nfo(nfo_filename:str, title:str, date:str=None) -> None:
+    """Creates a basic movie .nfo file.
+    Args:
+        nfo_filename (str): Path to the .nfo file to create.
+        title (str): Title of the movie.
+        date (str): Release date of the movie in YYYY-MM-DD format.
+    """
     root = ET.Element("movie")
     title_elem = ET.SubElement(root, "title")
     title_elem.text = title
@@ -97,8 +112,13 @@ def create_movie_nfo(nfo_filename, title, date=None):
     tree = ET.ElementTree(root)
     tree.write(nfo_filename, encoding="utf-8", xml_declaration=True)
 
-def update_movie_nfo(nfo_filename, title, date=None):
-    """Updates an existing movie .nfo file."""
+def update_movie_nfo(nfo_filename:str, title:str, date:str=None) -> None:
+    """Updates an existing movie .nfo file.
+    Args:
+        nfo_filename (str): Path to the .nfo file to update.
+        title (str): Title of the movie.
+        date (str): Release date of the movie in YYYY-MM-DD format.
+    """
     tree = ET.parse(nfo_filename)
     root = tree.getroot()
     title_elem = root.find("title")
@@ -116,21 +136,35 @@ def update_movie_nfo(nfo_filename, title, date=None):
         releasedate_elem.text = date
     tree.write(nfo_filename, encoding="utf-8", xml_declaration=True)
 
-def create_tvshow_nfo(nfo_filename):
+def create_tvshow_nfo(nfo_filename:str) -> None:
+    """Creates a basic TV show .nfo file.
+    Args:
+        nfo_filename (str): Path to the .nfo file to create.
+    """
     root = ET.Element("tvshow")
     title_elem = ET.SubElement(root, "title")
     title_elem.text = "TV Show Title"
     tree = ET.ElementTree(root)
     tree.write(nfo_filename, encoding="utf-8", xml_declaration=True)
 
-def create_season_nfo(nfo_filename):
+def create_season_nfo(nfo_filename:str) -> None:
+    """Creates a basic season .nfo file.
+    Args:
+        nfo_filename (str): Path to the .nfo file to create.
+    """
     root = ET.Element("season")
     title_elem = ET.SubElement(root, "title")
     title_elem.text = "Season Title"
     tree = ET.ElementTree(root)
     tree.write(nfo_filename, encoding="utf-8", xml_declaration=True)
 
-def create_episode_nfo(nfo_filename, title, date=None):
+def create_episode_nfo(nfo_filename:str, title:str, date:str=None) -> None:
+    """Creates a basic episode .nfo file.
+    Args:
+        nfo_filename (str): Path to the .nfo file to create.
+        title (str): Title of the episode.
+        date (str): Release date of the episode in YYYY-MM-DD format.
+    """
     root = ET.Element("episodedetails")
     title_elem = ET.SubElement(root, "title")
     title_elem.text = title
@@ -142,8 +176,13 @@ def create_episode_nfo(nfo_filename, title, date=None):
     tree = ET.ElementTree(root)
     tree.write(nfo_filename, encoding="utf-8", xml_declaration=True)
 
-def update_episode_nfo(nfo_filename, title, date=None):
-    """Updates an existing episode .nfo file."""
+def update_episode_nfo(nfo_filename:str, title:str, date:str=None) -> None:
+    """Updates an existing episode .nfo file.
+    Args:
+        nfo_filename (str): Path to the .nfo file to update.
+        title (str): Title of the episode.
+        date (str): Release date of the episode in YYYY-MM-DD format.
+    """
     tree = ET.parse(nfo_filename)
     root = tree.getroot()
     title_elem = root.find("title")
@@ -161,21 +200,29 @@ def update_episode_nfo(nfo_filename, title, date=None):
         releasedate_elem.text = date
     tree.write(nfo_filename, encoding="utf-8", xml_declaration=True)
 
-def create_artist_nfo(nfo_filename):
+def create_artist_nfo(nfo_filename:str) -> None:
+    """Creates a basic artist .nfo file.
+    Args:
+        nfo_filename (str): Path to the .nfo file to create.
+    """
     root = ET.Element("artist")
     name_elem = ET.SubElement(root, "name")
     name_elem.text = "Artist Name"
     tree = ET.ElementTree(root)
     tree.write(nfo_filename, encoding="utf-8", xml_declaration=True)
 
-def create_album_nfo(nfo_filename):
+def create_album_nfo(nfo_filename:str) -> None:
+    """Creates a basic album .nfo file.
+    Args:
+        nfo_filename (str): Path to the .nfo file to create.
+    """
     root = ET.Element("album")
     title_elem = ET.SubElement(root, "title")
     title_elem.text = "Album Title"
     tree = ET.ElementTree(root)
     tree.write(nfo_filename, encoding="utf-8", xml_declaration=True)
 
-def batch_add_attribute(nfo_dir, attribute, value, role=None, type_actor="Actor", thumb=None):
+def batch_add_attribute(nfo_dir:str, attribute:str, value:str, role:str=None, type_actor:str="Actor", thumb:str=None) -> None:
     """
     Batch adds an attribute to existing .nfo files.
 
@@ -225,21 +272,9 @@ def batch_add_attribute(nfo_dir, attribute, value, role=None, type_actor="Actor"
         except ET.ParseError:
             print(f"Error parsing {file_path.name}. Skipping.")
 
-# Example usage
-media_folder = "media"  # Replace with your media folder
-nfo_output_folder = "nfo_files"
-
-# Generate nfo files for movies in subfolders
-generate_nfo(media_folder, "movie", nfo_output_folder)
-
-# Add actor, studio and year to all generated movie .nfo files
-batch_add_attribute(nfo_output_folder, "studio", "Example Studio")
-batch_add_attribute(nfo_output_folder, "year", "2023")
-batch_add_attribute(nfo_output_folder, "actor", "Cadence Kline", role="Transgender Female", type_actor="Actor", thumb="E:\\Jellyfin\\Server\\metadata\\People\\C\\Cadence Kline\\folder.png")
-
-#Generate nfo for tv shows, episodes, artists or albums.
-#generate_nfo(media_folder, "tvshow", nfo_output_folder)
-#generate_nfo(media_folder, "episode", nfo_output_folder)
-#generate_nfo(media_folder, "artist", nfo_output_folder)
-#generate_nfo(media_folder, "album", nfo_output_folder)
-#generate_nfo(media_folder
+if __name__ == "__main__":
+    media_path = input("Enter the media directory path: ")
+    media_type = input("Enter the media type (movie, episode, musicvideo): ")
+    output_dir = input("Enter the output directory path: ")
+    generate_nfo(media_path, media_type, output_dir)
+    

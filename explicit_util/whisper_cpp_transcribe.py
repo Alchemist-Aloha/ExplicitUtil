@@ -65,14 +65,18 @@ def process_single_video(video_file: Path, whisper_root: Path, prompt: str = "")
     # Remove temporary audio file
     audio_file.unlink()
 
-def process_videos(input_folder: Path, whisper_root: Path, prompt:str="", suffix:tuple[str]=(".m4v",".mp4",".mkv")) -> None:
+def process_videos(input_folder: str, whisper_root: Path, prompt:str="", suffix:tuple[str]=(".m4v",".mp4",".mkv")) -> None:
     """Process all video files in the input folder.
     Args:
-        input_folder (Path): Path to the folder containing video files.
+        input_folder (Path or str): Path to the folder containing video files.
         whisper_root (Path): Path to the whisper.cpp root directory.
         prompt (str): Prompt for Whisper.cpp transcription.
         suffix (tuple[str]): Tuple of file extensions to process.
     """
+    input_folder = Path(input_folder)
+    if not input_folder.exists():
+        print(f"Error: Directory '{input_folder}' not found.")
+        return
     for video_file in input_folder.rglob("*"):
         if video_file.suffix.lower() in suffix:
             process_single_video(video_file, whisper_root, prompt)
