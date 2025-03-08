@@ -13,6 +13,7 @@ This library provides tools for managing media content, with features for video 
 - Recursively rename video files using namer
 - Zip and archive content with backup functionality
 - Batch unzip operations with recursive support
+- Generate and batch add metadata entry for media files
 
 ## Installation
 

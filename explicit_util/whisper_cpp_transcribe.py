@@ -27,7 +27,7 @@ def process_single_video(video_file: Path, whisper_root: Path, prompt: str = "")
     input_folder = video_file.parent
     base_name = video_file.stem
     audio_file = input_folder / f"{base_name}.wav"
-    srt_file = input_folder / f"{base_name}.srt"
+    # srt_file = input_folder / f"{base_name}.srt"
     whisper_path = whisper_root / "build/bin/Release/whisper-cli.exe"
     model_path = whisper_root / "models/ggml-large-v3.bin"
     
