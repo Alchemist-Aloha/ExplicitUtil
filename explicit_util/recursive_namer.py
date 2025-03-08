@@ -1,13 +1,13 @@
 from pathlib import Path
 import subprocess
+from typing import Union, Tuple
 
-
-def process_video_files(root_dir:str, namer_config:str=".namer.cfg", suffix:tuple[str]=(".m4v", ".mp4"),endswith:tuple[str]=("")) -> None: 
+def process_video_files(root_dir:Union[str, Path], namer_config:str=".namer.cfg", suffix:Tuple[str, ...]=(".m4v", ".mp4"),endswith:Tuple[str, ...]=()) -> None: 
     """
     Recursively finds and processes .m4v and .mp4 files in subfolders of root_dir.
 
     Args:
-        root_dir (str): The starting directory.
+        root_dir (str or Path): The starting directory.
         namer_config (str): Path to the namer configuration file.
         suffix (tuple): Tuple of file extensions to process.
         endswith (tuple): Tuple of suffixes to check for in the file name.
@@ -27,7 +27,7 @@ def process_video_files(root_dir:str, namer_config:str=".namer.cfg", suffix:tupl
             run_namer_command(item, namer_config)  # process the parent directory.
 
 
-def run_namer_command(directory:Path, namer_config:str=".namer.cfg") -> tuple[str, str, int]:
+def run_namer_command(directory:Path, namer_config:str=".namer.cfg") -> tuple[str|None, str, int]:
     """
     Executes a PowerShell command to process files in a directory.
     Try fetch from jellyfin generated nfo first. If fails, try to rename using theporndb.net.
@@ -127,5 +127,4 @@ if __name__ == "__main__":
     NAMER_CONFIG = ".namer.cfg"
     if not Path(NAMER_CONFIG).is_file():
         print(f"Error: Configuration file '{NAMER_CONFIG}' not found.")
-        exit(1)
-    process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=[".m4v", ".mp4"],endswith=(""))
+    process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=(".m4v", ".mp4"),endswith=())
