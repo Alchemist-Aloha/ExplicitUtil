@@ -15,7 +15,7 @@ def convert_single_heic(heic_path:Path, failed_count:dict, timeout:int=10, progr
 
     try:
         process = subprocess.Popen(
-            ["magick", str(heic_path), str(webp_path)],
+            ["magick", str(heic_path),"-quality", "80", str(webp_path)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )

@@ -2,7 +2,7 @@ from pathlib import Path
 import subprocess
 
 
-def process_video_files(root_dir:Path, namer_config:str=".namer.cfg", suffix:tuple[str]=(".m4v", ".mp4"),endswith:tuple[str]=("h265","subtitled")) -> None: 
+def process_video_files(root_dir:Path, namer_config:str=".namer.cfg", suffix:tuple[str]=(".m4v", ".mp4"),endswith:tuple[str]=("")) -> None: 
     """
     Recursively finds and processes .m4v and .mp4 files in subfolders of root_dir.
 
@@ -127,4 +127,4 @@ if __name__ == "__main__":
     if not Path(NAMER_CONFIG).is_file():
         print(f"Error: Configuration file '{NAMER_CONFIG}' not found.")
         exit(1)
-    process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=[".m4v", ".mp4"],endswith=("h265","subtitled"))
+    process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=[".m4v", ".mp4"],endswith=(""))

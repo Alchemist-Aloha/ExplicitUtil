@@ -65,7 +65,7 @@ def process_single_video(video_file: Path, whisper_root: Path, prompt: str = "")
     # Remove temporary audio file
     audio_file.unlink()
 
-def process_videos(input_folder: Path, whisper_root: Path, prompt:str="", suffix:tuple[str]=(".m4v")) -> None:
+def process_videos(input_folder: Path, whisper_root: Path, prompt:str="", suffix:tuple[str]=(".m4v",".mp4",".mkv")) -> None:
     """Process all video files in the input folder.
     Args:
         input_folder (Path): Path to the folder containing video files.
