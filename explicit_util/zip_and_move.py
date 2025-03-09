@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 import zipfile
 import hashlib
-
+import asyncio
 
 def is_leaf_directory(folder: Path) -> bool:
     """Check if a directory is a leaf directory (has no subdirectories) and is non-empty.
@@ -85,6 +85,54 @@ def zip_and_move(source_folder: str | Path, destination_folder: str | Path) -> N
             else:
                 print(f"Moving {folder} to {dest_path}")
                 shutil.move(temp_zip_path, zip_path)
+
+async def process_leaf_folder(folder: Path, source_folder: Path, destination_folder: Path) -> None:
+    # Create relative path for preserving structure
+    relative_path = folder.relative_to(source_folder)
+    zip_name = f"{folder.name}.zip"
+
+    # Create destination path maintaining original structure
+    dest_path = destination_folder / relative_path.parent
+    dest_path.mkdir(parents=True, exist_ok=True)
+
+    zip_path = dest_path / zip_name
+    temp_zip_path = folder.parents[0] / f"{folder.name}_temp.zip"
+
+    # Run zipping in a thread as it's a blocking operation
+    await asyncio.to_thread(zip_directory, folder, temp_zip_path)
+
+    if zip_path.exists():
+        existing_checksum = await asyncio.to_thread(compute_checksum, zip_path)
+        new_checksum = await asyncio.to_thread(compute_checksum, temp_zip_path)
+        if existing_checksum == new_checksum:
+            print(
+                f"Skipping {zip_path} as it already exists and matches the checksum."
+            )
+            temp_zip_path.unlink()  # Remove temporary zip file
+            return
+
+    print(f"Moving {folder} to {dest_path}")
+    await asyncio.to_thread(shutil.move, temp_zip_path, zip_path)
+
+
+async def async_zip_and_move(source_folder: str | Path, destination_folder: str | Path) -> None:
+    source_folder = Path(source_folder)
+    destination_folder = Path(destination_folder)
+    if not source_folder.is_dir() or not destination_folder.is_dir():
+        print(
+            f"Either '{source_folder}' or '{destination_folder}' is not a valid directory."
+        )
+        return
+
+    tasks = []
+    for folder in source_folder.rglob("*"):
+        if is_leaf_directory(folder):
+            tasks.append(
+                asyncio.create_task(process_leaf_folder(folder, source_folder, destination_folder))
+            )
+    # Wait for all folder processing tasks to finish
+    if tasks:
+        await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
