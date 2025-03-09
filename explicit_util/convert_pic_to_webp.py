@@ -6,7 +6,10 @@ from tqdm import tqdm
 
 
 def convert_single_pic(
-    pic_path: Path, failed_count: dict, timeout: int = 10, progress_bar:tqdm|None = None
+    pic_path: Path,
+    failed_count: dict,
+    timeout: int = 10,
+    progress_bar: tqdm | None = None,
 ) -> None:
     """Converts a single pic file to WebP with a timeout.
     Args:

@@ -2,7 +2,13 @@ from pathlib import Path
 import subprocess
 from typing import Union, Tuple
 
-def process_video_files(root_dir:Union[str, Path], namer_config:str=".namer.cfg", suffix:Tuple[str, ...]=(".m4v", ".mp4"),endswith:Tuple[str, ...]=()) -> None: 
+
+def process_video_files(
+    root_dir: Union[str, Path],
+    namer_config: str = ".namer.cfg",
+    suffix: Tuple[str, ...] = (".m4v", ".mp4"),
+    endswith: Tuple[str, ...] = (),
+) -> None:
     """
     Recursively finds and processes .m4v and .mp4 files in subfolders of root_dir.
 
@@ -27,11 +33,13 @@ def process_video_files(root_dir:Union[str, Path], namer_config:str=".namer.cfg"
             run_namer_command(item, namer_config)  # process the parent directory.
 
 
-def run_namer_command(directory:Path, namer_config:str=".namer.cfg") -> tuple[str|None, str, int]:
+def run_namer_command(
+    directory: Path, namer_config: str = ".namer.cfg"
+) -> tuple[str | None, str, int]:
     """
     Executes a PowerShell command to process files in a directory.
     Try fetch from jellyfin generated nfo first. If fails, try to rename using theporndb.net.
-    
+
     Args:
         directory (Path): The directory to process.
         namer_config (str): Path to the namer configuration file.
@@ -72,8 +80,7 @@ def run_namer_command(directory:Path, namer_config:str=".namer.cfg") -> tuple[st
         return None, str(e), -1
 
 
-
-def get_leaf_directories(root_path:Path) -> list[Path]:
+def get_leaf_directories(root_path: Path) -> list[Path]:
     """
     Recursively finds all directories within root_path that contain no further subdirectories.
 
@@ -97,7 +104,8 @@ def get_leaf_directories(root_path:Path) -> list[Path]:
                 leaf_dirs.extend(get_leaf_directories(item))
     return leaf_dirs
 
-def process_leaf_files(root_dir:Path, namer_config:str=".namer.cfg") -> None:
+
+def process_leaf_files(root_dir: Path, namer_config: str = ".namer.cfg") -> None:
     """
     Processes leaf directories in root_dir using the specified namer configuration.
 
@@ -116,15 +124,17 @@ def process_leaf_files(root_dir:Path, namer_config:str=".namer.cfg") -> None:
             print("PowerShell command error:")
             print(stderr)
             print(f"Return code: {returncode}")
-    
-    
+
+
 if __name__ == "__main__":
     # Example Usage
-    ROOT_DIR = Path(input("Enter the folder path to video files: ")) #replace with your directory.
+    ROOT_DIR = Path(
+        input("Enter the folder path to video files: ")
+    )  # replace with your directory.
     if not ROOT_DIR.is_dir():
         print(f"Error: Directory '{ROOT_DIR}' not found.")
         exit(1)
     NAMER_CONFIG = ".namer.cfg"
     if not Path(NAMER_CONFIG).is_file():
         print(f"Error: Configuration file '{NAMER_CONFIG}' not found.")
-    process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=(".m4v", ".mp4"),endswith=())
+    process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=(".m4v", ".mp4"), endswith=())

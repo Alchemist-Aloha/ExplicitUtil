@@ -4,11 +4,12 @@ import shutil
 import zipfile
 import hashlib
 
+
 def is_leaf_directory(folder: Path) -> bool:
     """Check if a directory is a leaf directory (has no subdirectories) and is non-empty.
     Args:
         folder (Path): The directory to check.
-        
+
     Returns:
         bool: True if the directory is a leaf directory, False otherwise.
     """
@@ -17,6 +18,7 @@ def is_leaf_directory(folder: Path) -> bool:
         and any(folder.iterdir())
         and not any(p.is_dir() for p in folder.iterdir())
     )
+
 
 def zip_directory(folder: Path, zip_path: Path) -> None:
     """Create a zip archive of the given folder.
@@ -28,6 +30,7 @@ def zip_directory(folder: Path, zip_path: Path) -> None:
         for file in folder.rglob("*"):  # Recursively get all files
             if file.is_file():  # Only include files, not directories
                 zipf.write(file, file.relative_to(folder.parent))
+
 
 def compute_checksum(file_path: Path) -> str:
     """Compute the SHA-256 checksum of a file.
@@ -42,7 +45,8 @@ def compute_checksum(file_path: Path) -> str:
             sha256.update(chunk)
     return sha256.hexdigest()
 
-def zip_and_move(source_folder:str, destination_folder:str) -> None:
+
+def zip_and_move(source_folder: str | Path, destination_folder: str | Path) -> None:
     """Zip leaf directories and move them to the destination folder.
     Args:
         source_folder (Path or str): The source directory containing folders to zip.
@@ -51,7 +55,9 @@ def zip_and_move(source_folder:str, destination_folder:str) -> None:
     source_folder = Path(source_folder)
     destination_folder = Path(destination_folder)
     if not source_folder.is_dir() or not destination_folder.is_dir():
-        print(f"Either '{source_folder}' or '{destination_folder}' is not a valid directory.")
+        print(
+            f"Either '{source_folder}' or '{destination_folder}' is not a valid directory."
+        )
         return
     for folder in source_folder.rglob("*"):
         if is_leaf_directory(folder):
@@ -72,11 +78,14 @@ def zip_and_move(source_folder:str, destination_folder:str) -> None:
                 existing_checksum = compute_checksum(zip_path)
                 new_checksum = compute_checksum(temp_zip_path)
                 if existing_checksum == new_checksum:
-                    print(f"Skipping {zip_path} as it already exists and matches the checksum.")
+                    print(
+                        f"Skipping {zip_path} as it already exists and matches the checksum."
+                    )
                     temp_zip_path.unlink()  # Remove temporary zip file
             else:
                 print(f"Moving {folder} to {dest_path}")
                 shutil.move(temp_zip_path, zip_path)
+
 
 if __name__ == "__main__":
     source_folder = Path(input("Enter the source folder path: "))
