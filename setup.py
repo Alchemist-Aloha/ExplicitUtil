@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="explicit_util",
-    version="0.2",
+    version="1.0",
     packages=["explicit_util"],
     install_requires=[
         "tqdm",
