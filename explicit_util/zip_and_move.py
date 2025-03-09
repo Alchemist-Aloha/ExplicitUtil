@@ -144,4 +144,4 @@ if __name__ == "__main__":
     if not destination_folder.is_dir():
         print(f"The folder '{destination_folder}' does not exist.")
         exit(1)
-    zip_and_move(source_folder, destination_folder)
+    asyncio.run(async_zip_and_move(source_folder, destination_folder))
