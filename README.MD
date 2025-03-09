@@ -55,9 +55,7 @@ You can run the code from the command line.
 # Transcribe videos
 python -m explicit_util.whisper_cpp_transcribe
 # Convert images to WebP
-python -m explicit_util.convert_images_to_webp
-# Rename videos
-python -m explicit_util.rename_videos
+python -m explicit_util.convert_pic_to_webp
 # Zip and archive pictures
 python -m explicit_util.zip_and_move
 # Unzip and extract
