@@ -87,6 +87,12 @@ def zip_and_move(source_folder: str | Path, destination_folder: str | Path) -> N
                 shutil.move(temp_zip_path, zip_path)
 
 async def process_leaf_folder(folder: Path, source_folder: Path, destination_folder: Path) -> None:
+    """Process a leaf directory: zip it and move to the destination folder.
+    Args:
+        folder (Path): The leaf directory to process.
+        source_folder (Path): The source directory containing folders to zip.
+        destination_folder (Path): The destination directory where zipped folders will be moved.
+    """
     # Create relative path for preserving structure
     relative_path = folder.relative_to(source_folder)
     zip_name = f"{folder.name}.zip"
@@ -116,6 +122,11 @@ async def process_leaf_folder(folder: Path, source_folder: Path, destination_fol
 
 
 async def async_zip_and_move(source_folder: str | Path, destination_folder: str | Path) -> None:
+    """Zip leaf directories and move them to the destination folder asynchronously.
+    Args:
+        source_folder (Path or str): The source directory containing folders to zip.
+        destination_folder (Path or str): The destination directory where zipped folders will be moved.
+    """
     source_folder = Path(source_folder)
     destination_folder = Path(destination_folder)
     if not source_folder.is_dir() or not destination_folder.is_dir():
