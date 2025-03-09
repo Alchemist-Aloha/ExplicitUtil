@@ -43,7 +43,7 @@ pip install -e .
 
 ## Usage
 
-### Using Juopyter Notebook
+### Using Jupyter Notebook
 
 You can run the code in Jupyter Notebook. The library is designed to be used interactively, allowing you to test and modify the code as needed. See `explicit_util_examples.ipynb`
 
