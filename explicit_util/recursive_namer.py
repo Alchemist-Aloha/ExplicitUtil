@@ -48,6 +48,7 @@ def run_namer_command(
         tuple: A tuple containing (stdout, stderr, returncode).
     """
     try:
+        print(f"Try loading from nfo. Processing file: {directory}")
         command = (
             f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -i -v'
         )
@@ -64,7 +65,7 @@ def run_namer_command(
         # print(stderr)
         print(returncode)
         if returncode == 0:
-            print(f"Error processing {directory}: {stderr}")
+            print(f"Error processing {directory} from nfo: {stderr}. Try the PornDB instead.")
             command = (
                 f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
             )
