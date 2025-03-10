@@ -10,6 +10,7 @@ def convert_single_pic(
     failed_count: dict,
     timeout: int = 10,
     progress_bar: tqdm | None = None,
+    quality: int = 80,
 ) -> None:
     """Converts a single pic file to WebP with a timeout.
     Args:
@@ -20,7 +21,7 @@ def convert_single_pic(
 
     try:
         process = subprocess.Popen(
-            ["magick", str(pic_path), "-quality", "80", str(webp_path)],
+            ["magick", str(pic_path), "-quality", str(quality), str(webp_path)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
@@ -73,6 +74,7 @@ def convert_pic_to_webp_multithreaded(
     num_threads: int = 4,
     timeout: int = 10,
     exts: tuple[str, ...] = (".heic", ".jpg", ".jpeg"),
+    quality: int = 80,
 ) -> None:
     """
     Converts picture files to WebP using ImageMagick with multithreading, and counts failures.
@@ -100,7 +102,7 @@ def convert_pic_to_webp_multithreaded(
         for pic_path in pic_files:
             thread = threading.Thread(
                 target=convert_single_pic,
-                args=(pic_path, failed_count, timeout, progress_bar),
+                args=(pic_path, failed_count, timeout, progress_bar, quality),
             )  # pass the timeout to the single heic function.
             threads.append(thread)
             thread.start()
@@ -118,7 +120,7 @@ def convert_pic_to_webp_multithreaded(
 
 
 if __name__ == "__main__":
-    folder_path = input("Enter the folder path to convert picture files: ")
+    folder_path = input("Enter the folder path to convert picture files: ").strip('"')
     num_threads = int(input("Enter the number of threads to use: "))
     timeout = int(input("Enter the timeout in seconds: "))
     convert_pic_to_webp_multithreaded(folder_path, num_threads, timeout)
