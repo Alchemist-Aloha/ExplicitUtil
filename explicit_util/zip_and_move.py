@@ -129,12 +129,14 @@ async def async_zip_and_move(source_folder: str | Path, destination_folder: str 
     """
     source_folder = Path(source_folder)
     destination_folder = Path(destination_folder)
-    if not source_folder.is_dir() or not destination_folder.is_dir():
+    if not source_folder.is_dir():
         print(
-            f"Either '{source_folder}' or '{destination_folder}' is not a valid directory."
+            f"Either '{source_folder}' is not a valid directory."
         )
         return
-
+    if not destination_folder.is_dir():
+        print(f"'{destination_folder}' is not a valid directory.")
+        destination_folder.mkdir(parents=True, exist_ok=True)
     tasks = []
     for folder in source_folder.rglob("*"):
         if is_leaf_directory(folder):
@@ -154,5 +156,6 @@ if __name__ == "__main__":
     destination_folder = Path(input("Enter the destination folder path: "))
     if not destination_folder.is_dir():
         print(f"The folder '{destination_folder}' does not exist.")
+        destination_folder.mkdir(parents=True, exist_ok=True)
         exit(1)
     asyncio.run(async_zip_and_move(source_folder, destination_folder))
