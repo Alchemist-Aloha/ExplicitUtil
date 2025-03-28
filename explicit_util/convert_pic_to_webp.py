@@ -73,7 +73,7 @@ def convert_pic_to_webp_multithreaded(
     folder_path: str,
     num_threads: int = 4,
     timeout: int = 10,
-    exts: tuple[str, ...] = (".heic", ".jpg", ".jpeg"),
+    exts: tuple[str, ...] = (".heic", ".jpg", ".jpeg", ".png", ".tiff"),
     quality: int = 80,
 ) -> None:
     """
