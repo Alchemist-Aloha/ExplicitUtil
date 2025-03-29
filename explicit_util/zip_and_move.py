@@ -84,7 +84,11 @@ def zip_and_move(source_folder: str | Path, destination_folder: str | Path) -> N
                     temp_zip_path.unlink()  # Remove temporary zip file
             else:
                 print(f"Moving {folder} to {dest_path}")
-                shutil.move(temp_zip_path, zip_path)
+                try:
+                    shutil.move(temp_zip_path, zip_path)
+                except Exception as e:
+                    print(f"Error moving {temp_zip_path} to {zip_path}: {e}")
+                    temp_zip_path.unlink(missing_ok=True)
 
 async def process_leaf_folder(folder: Path, source_folder: Path, destination_folder: Path) -> None:
     """Process a leaf directory: zip it and move to the destination folder.
@@ -157,5 +161,4 @@ if __name__ == "__main__":
     if not destination_folder.is_dir():
         print(f"The folder '{destination_folder}' does not exist.")
         destination_folder.mkdir(parents=True, exist_ok=True)
-        exit(1)
     asyncio.run(async_zip_and_move(source_folder, destination_folder))
