@@ -3,6 +3,7 @@ from pathlib import Path
 from PIL import Image
 import threading
 from tqdm import tqdm
+import platform
 
 
 def convert_single_pic(
@@ -20,8 +21,18 @@ def convert_single_pic(
     webp_path = pic_path.with_suffix(".webp")
 
     try:
+        if platform.system() == "Linux":
+            command = ["convert", str(pic_path), "-quality", str(quality), str(webp_path)]
+        else:
+            command = [
+            "magick",
+            str(pic_path),
+            "-quality",
+            str(quality),
+            str(webp_path),
+            ]
         process = subprocess.Popen(
-            ["magick", str(pic_path), "-quality", str(quality), str(webp_path)],
+            command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
