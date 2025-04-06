@@ -46,11 +46,11 @@ Download the installer and install.
 
 Compile the code based on your inference hardware.
 
-### Install `explicit_util`
+### Install `ExplicitUtil`
 
 ```bash
-git clone https://github.com/Alchemist-Aloha/explicit_util.git
-cd explicit_util
+git clone https://github.com/Alchemist-Aloha/ExplicitUtil.git
+cd ExplicitUtil
 pip install -e .
 ```
 
