@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess
 from typing import Union, Tuple
-
+import importlib.resources
 
 def process_video_files(
     root_dir: Union[str, Path],
@@ -128,14 +128,19 @@ def process_leaf_files(root_dir: Path, namer_config: str = ".namer.cfg") -> None
 
 
 if __name__ == "__main__":
-    # Example Usage
+    NAMER_CONFIG_DEFAULT = str(importlib.resources.files('ExplicitUtil').joinpath('config/.namer.cfg'))
+    # print(NAMER_CONFIG_DEFAULT)
     ROOT_DIR = Path(
         input("Enter the folder path to video files: ")
     )  # replace with your directory.
     if not ROOT_DIR.is_dir():
         print(f"Error: Directory '{ROOT_DIR}' not found.")
         exit(1)
-    NAMER_CONFIG = ".namer.cfg"
+    NAMER_CONFIG = input(
+        "Enter the path to the namer configuration file (.namer.cfg) or hit enter to load default: "
+    )
+    if NAMER_CONFIG == "":
+        NAMER_CONFIG = NAMER_CONFIG_DEFAULT
     if not Path(NAMER_CONFIG).is_file():
         print(f"Error: Configuration file '{NAMER_CONFIG}' not found.")
     process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=(".m4v", ".mp4"), endswith=())

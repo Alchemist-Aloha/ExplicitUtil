@@ -1,4 +1,4 @@
-# explicit_util
+# ExplicitUtil
 
 A utility library for managing media files, especially focused on conversion, organization, and archival.
 
@@ -66,17 +66,19 @@ You can run the code from the command line.
 
 ```bash
 # Transcribe videos
-python -m explicit_util.whisper_cpp_transcribe
+python -m ExplicitUtil.whisper_cpp_transcribe
 # Convert images to WebP
-python -m explicit_util.convert_pic_to_webp
+python -m ExplicitUtil.convert_pic_to_webp
 # Zip and archive pictures
-python -m explicit_util.zip_and_move
+python -m ExplicitUtil.zip_and_move
 # Unzip and extract
-python -m explicit_util.recursive_unzip
+python -m ExplicitUtil.recursive_unzip
 # Generate metadata
-python -m explicit_util.nfo_tool
+python -m ExplicitUtil.nfo_tool
 # Batch add metadata using namer
-python -m explicit_util.recursive_namer
+python -m ExplicitUtil.recursive_namer
+# Remove empty folders
+python -m ExplicitUtil.remove_empty
 ```
 
 ## License
