@@ -51,22 +51,17 @@ def remove_empty_folders(root_dir, dry_run=False):
     return count
 
 def main():
-    parser = argparse.ArgumentParser(description="Remove empty subdirectories from a given folder")
-    parser.add_argument("target_dir", help="Target directory to clean empty folders from")
-    parser.add_argument("--dry-run", action="store_true", 
-                        help="Only report what would be removed without actually removing")
-    
-    args = parser.parse_args()
-    
+    target_dir = input("Please enter the target directory: ").strip("\"")
+    dry_run = input("Do you want to perform a dry run? (y/n): ").strip().lower() == 'y'
     setup_logging()
     
-    target_path = os.path.abspath(args.target_dir)
+    target_path = os.path.abspath(target_dir)
     if not os.path.exists(target_path):
         logging.error(f"Directory does not exist: {target_path}")
-        return 1
+        exit(1)
     
-    remove_empty_folders(target_path, args.dry_run)
+    remove_empty_folders(target_path, dry_run)
     return 0
 
 if __name__ == "__main__":
-    exit(main())
+    main()
