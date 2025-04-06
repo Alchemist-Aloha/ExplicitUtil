@@ -153,7 +153,7 @@ async def async_zip_and_move(source_folder: str | Path, destination_folder: str 
 
 
 if __name__ == "__main__":
-    source_folder = Path(input("Enter the source folder path: "))
+    source_folder = Path(input("Enter the source folder path: ").strip("\""))
     if not source_folder.is_dir():
         print(f"The folder '{source_folder}' does not exist.")
         exit(1)

@@ -15,9 +15,9 @@ def get_input_folder() -> tuple[Path, Path]:
     """
     while True:
         input_folder = Path(
-            input("Enter the path to the folder containing video files: ")
+            input("Enter the path to the folder containing video files: ").strip("\"")
         )
-        whisper_root = Path(input("Enter the path to the whisper.cpp folder: "))
+        whisper_root = Path(input("Enter the path to the whisper.cpp folder: ").strip("\""))
         if input_folder.exists() and whisper_root.exists():
             return input_folder, whisper_root
         print(
