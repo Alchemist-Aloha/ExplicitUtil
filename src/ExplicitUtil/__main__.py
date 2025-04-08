@@ -12,7 +12,7 @@ import asyncio
 import toml
 
 
-def choice1():
+def choice1() -> None:
     """Convert images to WebP format."""
     config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/convert_pic_to_webp.toml')))
     config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -59,7 +59,7 @@ def choice1():
     except Exception as e:
         print(f"Error converting files: {e}")
 
-def choice2():
+def choice2() -> None:
     """generate nfo files"""
     media_path = input("Enter the media directory path: ")
     if not Path(media_path).exists():
@@ -82,7 +82,7 @@ def choice2():
         return
     
 
-def choice3():
+def choice3() -> None:
     """process video files"""
     NAMER_CONFIG_DEFAULT = str(importlib.resources.files('ExplicitUtil').joinpath('config/.namer.cfg'))
     default_config = {"namer_config_path":NAMER_CONFIG_DEFAULT,"suffix": (".m4v", ".mp4"), "endswith": ""}
@@ -136,7 +136,7 @@ def choice3():
         print(f"Error processing video files: {e}")
         return
 
-def choice4():
+def choice4() -> None:
     """unzip files recursively"""
     folder_path = Path(input("Enter the folder path to unzip files: ").strip('"'))
     delete_zips = input("Delete ZIP archives after unzipping? (y/n): ").strip().lower()=='y'
@@ -153,7 +153,7 @@ def choice4():
         return
 
 
-def choice5():
+def choice5() -> None:
     """remove empty folders"""
     target_dir = input("Please enter the target directory: ").strip("\"")
     dry_run = input("Do you want to perform a dry run? (y/n): ").strip().lower() == 'y'
@@ -170,7 +170,7 @@ def choice5():
         return
 
 
-def choice6():
+def choice6() -> None:
     """transcribe videos with Whisper.cpp"""
     config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/whisper_cpp_transcribe.toml')))
     config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -216,7 +216,7 @@ def choice6():
 
 
 
-def choice7():
+def choice7() -> None:
     """zip and move folders"""
     source_folder = Path(input("Enter the source folder path: ").strip("\""))
     if not source_folder.is_dir():
@@ -233,7 +233,7 @@ def choice7():
         print(f"Error zipping and moving folders: {e}")
         return
 
-def main():
+def main() -> None:
     while True:
         print("ExplicitUtil CLI")
         print("1. Convert images to WebP")
