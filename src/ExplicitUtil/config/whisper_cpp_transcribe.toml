@@ -1,3 +1,0 @@
-whisper_root = "E:\\whisper.cpp"
-suffix = ".m4v,.mp4,.wmv,.avi,.mkv"
-prompt = ""
