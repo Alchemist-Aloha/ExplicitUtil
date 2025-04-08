@@ -1,7 +1,7 @@
 import os
 import logging
 
-def setup_logging():
+def setup_logging() -> None:
     """Configure logging format and level"""
     logging.basicConfig(
         level=logging.INFO,
@@ -9,7 +9,7 @@ def setup_logging():
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-def remove_empty_folders(root_dir, dry_run=False):
+def remove_empty_folders(root_dir:str, dry_run:bool=False) -> int:
     """
     Recursively removes empty folders starting from the deepest level
     
@@ -49,7 +49,7 @@ def remove_empty_folders(root_dir, dry_run=False):
     logging.info(f"{action} {count} empty directories")
     return count
 
-def main():
+def main() -> None:
     target_dir = input("Please enter the target directory: ").strip("\"")
     dry_run = input("Do you want to perform a dry run? (y/n): ").strip().lower() == 'y'
     setup_logging()
@@ -60,7 +60,7 @@ def main():
         exit(1)
     
     remove_empty_folders(target_path, dry_run)
-    return 0
+    return
 
 if __name__ == "__main__":
     main()
