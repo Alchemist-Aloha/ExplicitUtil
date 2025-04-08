@@ -61,3 +61,4 @@ explicit_util.egg-info/
 __pycache__/
 
 /src/Explicit_util/config/*.toml
+/src/Explicit_util/*.egg-info/
