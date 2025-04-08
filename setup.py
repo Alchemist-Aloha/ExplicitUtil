@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ExplicitUtil",
-    version="1.3",
+    version="1.4",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
@@ -22,6 +22,6 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        "Operating System :: Windows",
     ],
 )

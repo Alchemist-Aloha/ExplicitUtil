@@ -1,12 +1,12 @@
 Metadata-Version: 2.4
 Name: ExplicitUtil
-Version: 1.3
+Version: 1.4
 Summary: A utility library for managing media files
 Home-page: https://github.com/Alchemist-Aloha/explicit_util
 Author: Alchemist-Aloha
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
-Classifier: Operating System :: OS Independent
+Classifier: Operating System :: Windows
 License-File: LICENSE
 Requires-Dist: tqdm
 Requires-Dist: namer

@@ -3,6 +3,9 @@ from pathlib import Path
 import threading
 import queue
 import concurrent.futures
+import sys
+import importlib.resources
+import toml
 
 # Global whisper job queue
 whisper_queue = queue.Queue()
@@ -54,9 +57,9 @@ def extract_audio(video_file: Path, whisper_root: Path, prompt: str = "") -> Non
     ]
     print(f"[FFmpeg] Running command: {' '.join(ffmpeg_cmd)}")
     try:
-        process = subprocess.run(ffmpeg_cmd, text=True, capture_output=True)
+        subprocess.run(ffmpeg_cmd, text=True, capture_output=True)
         print(f"[FFmpeg] Audio extraction completed for {video_file}.")
-        print(process.stdout)
+        # print(process.stdout)
     except subprocess.CalledProcessError as e:
         print(f"[FFmpeg] Error processing {video_file}: {e.stderr}")
         return
@@ -77,6 +80,26 @@ def extract_audio(video_file: Path, whisper_root: Path, prompt: str = "") -> Non
 
 def whisper_worker() -> None:
     """Continuously process whisper jobs sequentially."""
+    config_path = str(importlib.resources.files('ExplicitUtil').joinpath('config/whisper_command.toml'))
+    if not Path(config_path).exists():
+        print(f"Error: Whisper.cpp command config '{config_path}' not found. Generate default config.")
+        command = {
+            "threads" : 4,
+            "max_context" : 0,
+            "translate" : True,
+            "logprob_thold" : -0.5,
+            "no_speech_thold" : 0.3,
+            "word_thold" : 0.5,
+            "best_of" : 5,
+            "language" : "auto",
+            "entropy-thold" : 2.8,
+            "output_format" : "-osrt",
+        }
+        with open(config_path, 'w') as f:
+            f.write(toml.dumps(command))
+    else:
+        with open(config_path, 'r') as f:
+            command = toml.load(f)
     while True:
         job = whisper_queue.get()
         if job is None:  # Sentinel to shutdown the worker
@@ -90,31 +113,32 @@ def whisper_worker() -> None:
         model_path = job["model_path"]
         prompt = job["prompt"]
 
+        cli_encoding = 'utf-8'
         print(f"[Whisper] Processing: {video_file}")
 
         whisper_cmd = [
             str(whisper_path),
             "-m",
             str(model_path),
-            "-t",
-            "4",
+            "--threads",
+            str(command["threads"]),
             "--max-context",
-            "0",
-            "-tr",
-            "true",
+            str(command["max_context"]),
+            "--translate",
+            str(command["translate"]),
             "--logprob-thold",
-            "-0.5",
+            str(command["logprob_thold"]),
             "--no-speech-thold",
-            "0.3",
+            str(command["no_speech_thold"]),
             "--word-thold",
-            "0.5",
+            str(command["word_thold"]), 
             "--best-of",
-            "5",
-            "-l",
-            "auto",
-            "-et",
-            "2.8",
-            "-osrt",
+            str(command["best_of"]),
+            "--language",
+            str(command["language"]),
+            "--entropy-thold",
+            str(command["entropy-thold"]),
+            str(command["output_format"]),
             "--prompt",
             prompt,
             "-f",
@@ -122,27 +146,109 @@ def whisper_worker() -> None:
             "-of",
             str(input_folder / base_name),
         ]
+
         print(f"[Whisper] Running command: {' '.join(whisper_cmd)}")
-        try:
-            process = subprocess.run(whisper_cmd, text=True, capture_output=True)
-            print(f"[Whisper] Transcription completed for {video_file}.")
-            print(process.stdout)
-        except subprocess.CalledProcessError as e:
-            print(f"[Whisper] Error processing {video_file}: {e.stderr}")
-            whisper_queue.task_done()
-            continue
+        # try:
+        #     process = subprocess.run(whisper_cmd, text=True, capture_output=True)
+        #     print(f"[Whisper] Transcription completed for {video_file}.")
+        #     print(process.stdout)
+        # except subprocess.CalledProcessError as e:
+        #     print(f"[Whisper] Error processing {video_file}: {e.stderr}")
+        #     whisper_queue.task_done()
+        #     continue
 
-        # Remove temporary audio file
+        # # Remove temporary audio file
+        # try:
+        #     audio_file.unlink()
+        #     print(f"[Whisper] Removed temporary audio file {audio_file}")
+        # except Exception as e:
+        #     print(f"[Whisper] Could not remove audio file {audio_file}: {e}")
+
+        # whisper_queue.task_done()
+        process = None  # Initialize process variable for cleanup
+        success = False  # Initialize success variable
         try:
-            audio_file.unlink()
-            print(f"[Whisper] Removed temporary audio file {audio_file}")
+            # --- Start Subprocess with Popen ---
+            process = subprocess.Popen(
+                whisper_cmd,
+                stdout=subprocess.PIPE,    # Capture stdout
+                stderr=subprocess.STDOUT,  # Redirect stderr TO stdout stream
+                text=True,                 # Decode output as text
+                encoding=cli_encoding,     # Specify expected encoding
+                errors='replace',          # How to handle decoding errors
+                bufsize=1,                 # Use line buffering
+                shell=False                # Do NOT use shell=True unless essential
+                                           # (security risk, quoting issues)
+            )
+
+            # --- Read and Display Output in Real-Time ---
+            print(f"--- [Whisper Output Start: {base_name}] ---")
+            # Read line by line until the process's stdout stream is closed
+            if process.stdout:
+                for line in iter(process.stdout.readline, ''):
+                    sys.stdout.write(line)  # Write the line directly
+                    sys.stdout.flush()      # Ensure it appears immediately
+            print(f"\n--- [Whisper Output End: {base_name}] ---") # Add newline for clarity
+
+            # --- Wait for Process Completion and Check Result ---
+            process.wait() # Wait for the process to fully terminate
+            return_code = process.returncode
+
+            if return_code == 0:
+                print(f"[Whisper] Transcription completed successfully for {video_file} (Exit Code: {return_code}).")
+                success = True
+            else:
+                # Error message from Whisper was already printed in real-time
+                print(f"[Whisper] Error: Whisper process for {video_file} failed with Exit Code: {return_code}", file=sys.stderr)
+                success = False
+
+        except FileNotFoundError:
+            print(f"[Whisper] Error: Whisper executable not found at '{whisper_path}'. Cannot process {video_file}.", file=sys.stderr)
+            # No process started, job failed. Ensure success remains False.
+            success = False
         except Exception as e:
-            print(f"[Whisper] Could not remove audio file {audio_file}: {e}")
+            print(f"[Whisper] An unexpected error occurred while running/reading Whisper for {video_file}: {e}", file=sys.stderr)
+            success = False
+            # --- Attempt to Terminate Zombie Process (if any) ---
+            if process and process.poll() is None: # Check if process exists and is running
+                 print("[Whisper] Attempting to terminate Whisper process.", file=sys.stderr)
+                 try:
+                     process.terminate() # Ask nicely first
+                     process.wait(timeout=5) # Give it time to exit
+                     print("[Whisper] Process terminated.", file=sys.stderr)
+                 except subprocess.TimeoutExpired:
+                     print("[Whisper] Process did not terminate gracefully, killing.", file=sys.stderr)
+                     process.kill() # Force kill
+                     process.wait() # Wait for kill to complete
+                 except Exception as term_e:
+                     print(f"[Whisper] Error during process termination: {term_e}", file=sys.stderr)
+        finally:
+            # --- Cleanup ---
+            if success:
+                # Remove temporary audio file only on success
+                try:
+                    if audio_file.exists(): # Check if it still exists
+                        audio_file.unlink()
+                        print(f"[Whisper] Removed temporary audio file: {audio_file}")
+                    else:
+                        print(f"[Whisper] Temporary audio file already removed or not found: {audio_file}")
+                except Exception as e:
+                    # Log failure to remove, but don't let it stop the worker
+                    print(f"[Whisper] Warning: Could not remove temporary audio file {audio_file}: {e}", file=sys.stderr)
+            else:
+                # Optionally keep the audio file for debugging on error
+                if audio_file.exists():
+                    print(f"[Whisper] Keeping temporary audio file due to failure: {audio_file}", file=sys.stderr)
 
-        whisper_queue.task_done()
+            # --- Mark Job Done ---
+            # Crucial: Mark the job as done in the queue regardless of outcome.
+            # This allows queue.join() to eventually unblock if used elsewhere.
+            whisper_queue.task_done()
+            print(f"--- [Whisper] Finished processing job for: {video_file} ---")
+            
 
 
-def process_videos(
+def transcribe_videos(
     input_folder: str | Path,
     whisper_root: str | Path,
     prompt: str = "",
@@ -155,6 +261,7 @@ def process_videos(
         prompt (str): Prompt for Whisper transcription.
         suffix (tuple[str]): Extensions to process.
     """
+    whisper_queue = queue.Queue()
     input_folder = Path(input_folder)
     whisper_root = Path(whisper_root)
     if not input_folder.exists():
@@ -186,19 +293,21 @@ def process_videos(
     worker_thread.join()
 
     print(f"Transcription completed for all videos in '{input_folder}'.")
+    return
 
 
-def run_batch_transcribe(
-    input_folder: str | Path,
-    whisper_root: str | Path,
-    prompt: str = "",
-    suffix: tuple[str, ...] = (".m4v", ".mp4", ".mkv"),
-) -> None:
-    """Main loop prompting for input folders and processing videos."""
-    global whisper_queue
-    whisper_queue = queue.Queue()
-    while True:
-        process_videos(input_folder, whisper_root, prompt, suffix)
+# def run_batch_transcribe(
+#     input_folder: str | Path,
+#     whisper_root: str | Path,
+#     prompt: str = "",
+#     suffix: tuple[str, ...] = (".m4v", ".mp4", ".mkv"),
+#     language: str = "auto"
+# ) -> None:
+#     """Main loop prompting for input folders and processing videos."""
+#     global whisper_queue
+#     whisper_queue = queue.Queue()
+#     while True:
+#         transcribe_videos(input_folder, whisper_root, prompt, suffix,language=language)
 
 
 if __name__ == "__main__":
@@ -213,4 +322,4 @@ if __name__ == "__main__":
         )
         if not prompt:
             prompt = ""
-        process_videos(input_folder, whisper_root, prompt="", suffix=(".m4v",))
+        transcribe_videos(input_folder, whisper_root, prompt="", suffix=(".m4v",))

@@ -1,0 +1,10 @@
+threads = 4
+max_context = 0
+translate = true
+logprob_thold = -0.5
+no_speech_thold = 0.3
+word_thold = 0.5
+best_of = 5
+language = "auto"
+entropy-thold = 2.8
+output_format = "-osrt"

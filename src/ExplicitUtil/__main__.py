@@ -3,7 +3,7 @@ from .nfo_tool import generate_nfo
 from .recursive_namer import process_video_files
 from .recursive_unzip import recursive_unzip
 from .remove_empty import remove_empty_folders
-from .whisper_cpp_transcribe import process_videos, get_input_folder
+from .whisper_cpp_transcribe import transcribe_videos
 from .zip_and_move import async_zip_and_move
 import importlib.resources
 import os
@@ -17,18 +17,21 @@ def choice1():
     config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/convert_pic_to_webp.toml')))
     config_path.parent.mkdir(parents=True, exist_ok=True)
     default_config = {"num_threads": 6, "timeout": 10, "quality": 80}
-
+    use_config = False
     # Load configuration from file if available
     if config_path.is_file():
-        try:
-            config = toml.load(config_path)
-            use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
-            if use_config:
+        use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
+        if use_config:
+            # Load the config file
+            try:
+                config = toml.load(config_path)
                 default_config.update({k: config.get(k, v) for k, v in default_config.items()})
-        except Exception as e:
-            print(f"Error loading config file: {e}")
-            return
-    else:
+
+            except Exception as e:
+                print(f"Error loading config file: {e}")
+                return
+            
+    if not config_path.is_file() or not use_config:
         print("Config file not found. Using manual input.")
         # Prompt for settings if not using config
         for key, default in default_config.items():
@@ -85,16 +88,17 @@ def choice3():
     default_config = {"namer_config_path":NAMER_CONFIG_DEFAULT,"suffix": (".m4v", ".mp4"), "endswith": ""}
     # Load configuration from file if available
     config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/recursive_namer.toml')))
+    use_config = False
     if Path(config_path).is_file():
-        try:
-            config = toml.load(config_path)
-            use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
-            if use_config:
+        use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
+        if use_config:
+            try:
+                config = toml.load(config_path)
                 default_config.update({k: config.get(k, v) for k, v in default_config.items()})
-        except Exception as e:
-            print(f"Error loading config file: {e}")
-            return
-    else:
+            except Exception as e:
+                print(f"Error loading config file: {e}")
+                return
+    if not Path(config_path).is_file() or not use_config:
         print("Config file not found. Using manual input.")
         # Prompt for settings if not using config
 
@@ -171,30 +175,43 @@ def choice6():
     config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/whisper_cpp_transcribe.toml')))
     config_path.parent.mkdir(parents=True, exist_ok=True)
     default_config = {"whisper_root": "", "suffix": (".m4v", ".mp4"), "prompt": ""}
+    use_config = False
     # Load configuration from file if available
     if config_path.is_file():
-        try:
-            config = toml.load(config_path)
-            use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
-            if use_config:
-                default_config.update({k: config.get(k, v) for k, v in default_config.items()})
-        except Exception as e:
-            print(f"Error loading config file: {e}")
-            return
-    else:
-        print("Config file not found. Using manual input.")
+        use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
+        if use_config:
+            try:
+                config = toml.load(config_path)
+                default_config.update({k: config.get(k, v) for k, v in default_config.items()})           
+            except Exception as e:
+                print(f"Error loading config file: {e}")
+                return
+    if not config_path.is_file() or not use_config:
+        print("Using manual input.")
         # Prompt for settings if not using config
         for key, default in default_config.items():
+            if key == "whisper_root":
+                print("Enter the path to the whisper.cpp root directory ():")
+            if key == "prompt":
+                print("Enter the prompt for Whisper transcription:")
+            if key == "suffix":
+                print("Enter NOT case sensitive suffix strings split with comma (e.g., .m4v,.mp4):")
+            print("Enter 'default' to use default value")
             value = input(f"Enter {key.replace('_', ' ')} (default: {default}): ").strip()
+            if value == "default":
+                value = default_config[key]
             if value:
-                if key == "suffix":
+                if key == "suffix" and value is str:
                     value = tuple(ext.strip() for ext in value.split(","))
                 default_config[key] = value
+        if not Path(default_config["whisper_root"]).is_dir():
+            print(f"Error: Directory '{default_config['whisper_root']}' not found.")
+            return
         with open(config_path, "w") as config_file:
             toml.dump(default_config, config_file)
             print(f"Config saved to {config_path}")
     input_folder= input("Enter the folder path to video files: ").strip('"')
-    process_videos(input_folder, default_config["whisper_root"], prompt=default_config["prompt"], suffix=default_config["suffix"])
+    transcribe_videos(input_folder, default_config["whisper_root"], prompt=default_config["prompt"], suffix=default_config["suffix"])
     return
 
 
@@ -226,8 +243,12 @@ def main():
         print("5. Remove empty folders")
         print("6. Transcribe videos with Whisper.cpp")
         print("7. Zip and move folders")
+        print("Type 'exit' to quit the program.")
 
         choice = input("Choose an option (1-7): ")
+        if choice.lower() == "exit":
+            print("Exiting...")
+            break
         try:
             choice = int(choice)
         except ValueError:
@@ -250,7 +271,7 @@ def main():
             choice7()
         else:
             print("Invalid choice. Please try again.")
-
+            continue
 
 if __name__ == "__main__":
     main()

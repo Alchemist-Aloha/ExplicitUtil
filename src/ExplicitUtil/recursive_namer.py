@@ -16,7 +16,7 @@ def process_video_files(
         root_dir (str or Path): The starting directory.
         namer_config (str): Path to the namer configuration file.
         suffix (tuple): Tuple of file extensions to process.
-        endswith (tuple): Tuple of suffixes to check for in the file name.
+        endswith (str): process files whose file stems end with defined string .
     """
     root_dir = Path(root_dir)  # Ensure root_dir is a Path object
     if not root_dir.exists():
