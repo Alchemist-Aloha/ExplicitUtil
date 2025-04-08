@@ -1,4 +1,0 @@
-tqdm
-namer
-pillow
-toml
