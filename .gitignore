@@ -57,10 +57,10 @@ bower_components
 # Optional eslint cache
 .eslintcache
 
-explicit_util.egg-info/
+*.egg-info/
 __pycache__/
 
-/src/Explicit_util/config/*.toml
-/src/Explicit_util/*.egg-info/
+/src/ExplicitUtil/config/*.toml
+/src/ExplicitUtil/*.egg-info/
 
 /database/
