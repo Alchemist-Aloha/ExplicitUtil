@@ -1,6 +1,7 @@
 LICENSE
 setup.py
 src/ExplicitUtil/__init__.py
+src/ExplicitUtil/__main__.py
 src/ExplicitUtil/convert_pic_to_webp.py
 src/ExplicitUtil/nfo_tool.py
 src/ExplicitUtil/recursive_namer.py
@@ -11,5 +12,6 @@ src/ExplicitUtil/zip_and_move.py
 src/ExplicitUtil.egg-info/PKG-INFO
 src/ExplicitUtil.egg-info/SOURCES.txt
 src/ExplicitUtil.egg-info/dependency_links.txt
+src/ExplicitUtil.egg-info/entry_points.txt
 src/ExplicitUtil.egg-info/requires.txt
 src/ExplicitUtil.egg-info/top_level.txt

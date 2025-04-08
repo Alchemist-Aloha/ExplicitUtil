@@ -11,6 +11,7 @@ License-File: LICENSE
 Requires-Dist: tqdm
 Requires-Dist: namer
 Requires-Dist: pillow
+Requires-Dist: toml
 Dynamic: author
 Dynamic: classifier
 Dynamic: home-page

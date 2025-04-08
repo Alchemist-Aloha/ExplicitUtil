@@ -1,3 +1,4 @@
 tqdm
 namer
 pillow
+toml

@@ -1,0 +1,2 @@
+[console_scripts]
+ExplicitUtil = ExplicitUtil.__main__:main

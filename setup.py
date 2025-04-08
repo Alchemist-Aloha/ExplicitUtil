@@ -9,7 +9,13 @@ setup(
         "tqdm",
         "namer",
         "pillow",
+        "toml",
     ],
+    entry_points={
+        "console_scripts": [
+            "ExplicitUtil=ExplicitUtil.__main__:main",
+        ],
+    },
     author="Alchemist-Aloha",
     description="A utility library for managing media files",
     url="https://github.com/Alchemist-Aloha/explicit_util",

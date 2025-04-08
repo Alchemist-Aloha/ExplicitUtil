@@ -135,4 +135,4 @@ if __name__ == "__main__":
     num_threads = int(input("Enter the number of threads to use: "))
     timeout = int(input("Enter the timeout in seconds: "))
     convert_pic_to_webp_multithreaded(folder_path, num_threads, timeout)
-# This code is a Python script that converts picture files to WebP format using ImageMagick in a multithreaded manner.
+
