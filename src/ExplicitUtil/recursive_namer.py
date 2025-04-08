@@ -2,12 +2,12 @@ from pathlib import Path
 import subprocess
 from typing import Union, Tuple
 import importlib.resources
-
+NAMER_CONFIG_DEFAULT = str(importlib.resources.files('ExplicitUtil').joinpath('config/.namer.cfg'))
 def process_video_files(
     root_dir: Union[str, Path],
-    namer_config: str = ".namer.cfg",
+    namer_config: str = NAMER_CONFIG_DEFAULT,
     suffix: Tuple[str, ...] = (".m4v", ".mp4"),
-    endswith: Tuple[str, ...] = (),
+    endswith: str = "",
 ) -> None:
     """
     Recursively finds and processes .m4v and .mp4 files in subfolders of root_dir.
@@ -143,4 +143,4 @@ if __name__ == "__main__":
         NAMER_CONFIG = NAMER_CONFIG_DEFAULT
     if not Path(NAMER_CONFIG).is_file():
         print(f"Error: Configuration file '{NAMER_CONFIG}' not found.")
-    process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=(".m4v", ".mp4"), endswith=())
+    process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=(".m4v", ".mp4"), endswith="")

@@ -38,9 +38,9 @@ def choice1():
                     default_config[key] = int(value)
                 except ValueError:
                     print(f"Invalid input for {key}. Using default: {default}.")
-    with open(config_path, "w") as config_file:
-        toml.dump(default_config, config_file)
-        print(f"Config saved to {config_path}")
+        with open(config_path, "w") as config_file:
+            toml.dump(default_config, config_file)
+            print(f"Config saved to {config_path}")
     folder_path = input("Enter the folder path to convert picture files: ").strip('"')
     if not Path(folder_path).exists():
         print(f"Error: Folder '{folder_path}' does not exist.")
@@ -61,7 +61,7 @@ def choice2():
     media_path = input("Enter the media directory path: ")
     if not Path(media_path).exists():
         print(f"Error: Media directory '{media_path}' does not exist.")
-        exit(1)
+        return
     media_type = input("Enter the media type (movie, episode, musicvideo): ")
     output_dir = input("Enter the output directory path: ")
     if not Path(output_dir).exists():
@@ -70,7 +70,7 @@ def choice2():
             os.makedirs(output_dir)
         except Exception as e:
             print(f"Error creating output directory: {e}")
-            exit(1)
+            return
     try:
         generate_nfo(media_path, media_type, output_dir)
         return
@@ -82,22 +82,51 @@ def choice2():
 def choice3():
     """process video files"""
     NAMER_CONFIG_DEFAULT = str(importlib.resources.files('ExplicitUtil').joinpath('config/.namer.cfg'))
+    default_config = {"namer_config_path":NAMER_CONFIG_DEFAULT,"suffix": (".m4v", ".mp4"), "endswith": ""}
+    # Load configuration from file if available
+    config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/recursive_namer.toml')))
+    if Path(config_path).is_file():
+        try:
+            config = toml.load(config_path)
+            use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
+            if use_config:
+                default_config.update({k: config.get(k, v) for k, v in default_config.items()})
+        except Exception as e:
+            print(f"Error loading config file: {e}")
+            return
+    else:
+        print("Config file not found. Using manual input.")
+        # Prompt for settings if not using config
+
+        for key, default in default_config.items():
+            if key == "endswith":
+                print("Enter NOT case sensitive endswith string (e.g., _1080p_WEBDL):")
+            if key == "suffix":
+                print("Enter NOT case sensitive suffix strings split with comma (e.g., .m4v,.mp4):")
+            print("Enter 'default' to use default value")
+            value = input(f"Enter {key.replace('_', ' ')} (default: {default}): ").strip()
+            if value == "default":
+                value = default_config[key]
+            if value:
+                if key == "suffix" and value is str:
+                    value = tuple(ext.strip() for ext in value.split(","))
+                default_config[key] = value
+        if not Path(default_config["namer_config_path"]).is_file():
+            print(f"Error: Configuration file '{default_config['namer_config_path']}' not found.")
+            return
+        with open(config_path, "w") as config_file:
+            toml.dump(default_config, config_file)
+            print(f"Config saved to {config_path}")
     # print(NAMER_CONFIG_DEFAULT)
-    ROOT_DIR = Path(
+    folder_path = Path(
         input("Enter the folder path to video files: ")
     )  # replace with your directory.
-    if not ROOT_DIR.is_dir():
-        print(f"Error: Directory '{ROOT_DIR}' not found.")
-        exit(1)
-    NAMER_CONFIG = input(
-        "Enter the path to the namer configuration file (.namer.cfg) or hit enter to load default: "
-    )
-    if NAMER_CONFIG == "":
-        NAMER_CONFIG = NAMER_CONFIG_DEFAULT
-    if not Path(NAMER_CONFIG).is_file():
-        print(f"Error: Configuration file '{NAMER_CONFIG}' not found.")
+    if not folder_path.is_dir():
+        print(f"Error: Directory '{folder_path}' not found.")
+        return
+
     try:
-        process_video_files(ROOT_DIR, NAMER_CONFIG, suffix=(".m4v", ".mp4"), endswith=())
+        process_video_files(root_dir=folder_path, namer_config=default_config['namer_config_path'], suffix=default_config["suffix"], endswith=default_config["endswith"])
         return
     except Exception as e:
         print(f"Error processing video files: {e}")
@@ -139,18 +168,33 @@ def choice5():
 
 def choice6():
     """transcribe videos with Whisper.cpp"""
-    input_folder, whisper_root = get_input_folder()
-    suffix = input(
-        "Enter the file extensions to process (comma-separated, e.g., .m4v,.mp4): "
-    )
-    suffix = tuple(ext.strip() for ext in suffix.split(","))
-    if suffix == ("",):
-        print("No file extensions provided. Use default: .m4v,.mp4")
-        suffix = (".m4v", ".mp4")
-    prompt = input(
-        "Enter the prompt for Whisper transcription (leave blank for none): "
-    )
-    process_videos(input_folder, whisper_root, prompt=prompt, suffix=suffix)
+    config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/whisper_cpp_transcribe.toml')))
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    default_config = {"whisper_root": "", "suffix": (".m4v", ".mp4"), "prompt": ""}
+    # Load configuration from file if available
+    if config_path.is_file():
+        try:
+            config = toml.load(config_path)
+            use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
+            if use_config:
+                default_config.update({k: config.get(k, v) for k, v in default_config.items()})
+        except Exception as e:
+            print(f"Error loading config file: {e}")
+            return
+    else:
+        print("Config file not found. Using manual input.")
+        # Prompt for settings if not using config
+        for key, default in default_config.items():
+            value = input(f"Enter {key.replace('_', ' ')} (default: {default}): ").strip()
+            if value:
+                if key == "suffix":
+                    value = tuple(ext.strip() for ext in value.split(","))
+                default_config[key] = value
+        with open(config_path, "w") as config_file:
+            toml.dump(default_config, config_file)
+            print(f"Config saved to {config_path}")
+    input_folder= input("Enter the folder path to video files: ").strip('"')
+    process_videos(input_folder, default_config["whisper_root"], prompt=default_config["prompt"], suffix=default_config["suffix"])
     return
 
 
@@ -177,7 +221,7 @@ def main():
         print("ExplicitUtil CLI")
         print("1. Convert images to WebP")
         print("2. Generate NFO files")
-        print("3. Process video files")
+        print("3. Batch rename video files with namer")
         print("4. Unzip files recursively")
         print("5. Remove empty folders")
         print("6. Transcribe videos with Whisper.cpp")
