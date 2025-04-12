@@ -56,6 +56,11 @@ pip install -e .
 
 ## Usage
 
+### API Documentation
+The library is designed to be used as a module, and the functions are organized into separate files for clarity. Each file contains a specific set of functions related to its purpose.
+
+Check [https://alchemist-aloha.github.io/ExplicitUtil/ExplicitUtil.html](https://alchemist-aloha.github.io/ExplicitUtil/ExplicitUtil.html) for the API documentation.
+
 ### Using Jupyter Notebook
 
 You can run the code in Jupyter Notebook. The library is designed to be used interactively, allowing you to test and modify the code as needed. See `explicit_util_examples.ipynb`
