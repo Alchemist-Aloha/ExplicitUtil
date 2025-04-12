@@ -4,7 +4,7 @@ import shutil
 import zipfile
 import hashlib
 import asyncio
-
+__docformat__ = "google"
 def is_leaf_directory(folder: Path) -> bool:
     """Check if a directory is a leaf directory (has no subdirectories) and is non-empty.
     Args:

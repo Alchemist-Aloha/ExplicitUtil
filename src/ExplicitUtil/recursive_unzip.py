@@ -1,7 +1,7 @@
 import zipfile
 import argparse
 from pathlib import Path
-
+__docformat__ = "google"
 
 def recursive_unzip(folder_path: Path | str, delete_zips: bool = False) -> None:
     """

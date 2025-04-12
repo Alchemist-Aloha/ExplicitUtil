@@ -11,7 +11,7 @@ from pathlib import Path
 import asyncio
 import toml
 
-
+__docformat__ = "google"
 def choice1() -> None:
     """Convert images to WebP format."""
     config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/convert_pic_to_webp.toml')))

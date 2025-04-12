@@ -6,7 +6,7 @@ import concurrent.futures
 import sys
 import importlib.resources
 import toml
-
+__docformat__ = "google"
 # Global whisper job queue
 whisper_queue = queue.Queue()
 

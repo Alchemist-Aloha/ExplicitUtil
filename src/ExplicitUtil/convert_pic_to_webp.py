@@ -5,7 +5,7 @@ import threading
 from tqdm import tqdm
 import platform
 
-
+__docformat__ = "google"
 def convert_single_pic(
     pic_path: Path,
     failed_count: dict,
@@ -14,10 +14,15 @@ def convert_single_pic(
     quality: int = 80,
 ) -> None:
     """Converts a single pic file to WebP with a timeout.
+    
     Args:
+    
         pic_path (Path): Path to the picture file.
         failed_count (dict): Dictionary to count failed conversions.
-        timeout (int): Timeout in seconds"""
+        timeout (int): Timeout in seconds
+        progress_bar (tqdm): Progress bar for tracking progress.
+        quality (int): Quality of the WebP image.
+    """
     webp_path = pic_path.with_suffix(".webp")
 
     try:
@@ -89,11 +94,14 @@ def convert_pic_to_webp_multithreaded(
 ) -> None:
     """
     Converts picture files to WebP using ImageMagick with multithreading, and counts failures.
+    
     Args:
-        folder_path (str): Path to the folder containing HEIC files.
-        num_threads (int): Number of threads to use.
-        timeout (int): Timeout in seconds for each conversion.
-        exts (tuple): File extensions to search for.
+    
+        folder_path (str): Path to the folder containing HEIC files.        
+        num_threads (int): Number of threads to use. Default is 4.
+        timeout (int): Timeout in seconds for each conversion. Default is 10 seconds.
+        exts (tuple): File extensions to search for. Default is (".heic", ".jpg", ".jpeg", ".png", ".tiff").
+        quality (int): Quality of the WebP image. Default is 80.
     """
     folder = Path(folder_path)
     pic_files = []

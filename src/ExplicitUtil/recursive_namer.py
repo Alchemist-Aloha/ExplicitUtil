@@ -2,10 +2,10 @@ from pathlib import Path
 import subprocess
 from typing import Union, Tuple
 import importlib.resources
-NAMER_CONFIG_DEFAULT = str(importlib.resources.files('ExplicitUtil').joinpath('config/.namer.cfg'))
+__docformat__ = "google"
 def process_video_files(
     root_dir: Union[str, Path],
-    namer_config: str = NAMER_CONFIG_DEFAULT,
+    namer_config: str,
     suffix: Tuple[str, ...] = (".m4v", ".mp4"),
     endswith: str = "",
 ) -> None:

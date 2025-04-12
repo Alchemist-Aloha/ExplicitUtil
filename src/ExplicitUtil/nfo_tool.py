@@ -1,11 +1,13 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 import re
-
+__docformat__ = "google"
 
 def process_single_file(file_path: Path, media_type: str, output_path: Path) -> None:
     """Processes a single media file to generate or update its .nfo file.
+
     Args:
+
         file_path (Path): Path to the media file.
         media_type (str): Type of media (movie, episode, musicvideo).
         output_path (Path): Directory to save the generated .nfo file.
@@ -35,6 +37,7 @@ def generate_nfo(media_path: str, media_type: str, output_dir: str) -> None:
     Generates .nfo files for media in a given directory and subdirectories.
 
     Args:
+
         media_path (str): Path to the media directory.
         media_type (str): Type of media (movie, tvshow, season, episode, artist, album, musicvideo).
         output_dir (str): Directory to save the generated .nfo files.
@@ -81,7 +84,9 @@ def generate_nfo(media_path: str, media_type: str, output_dir: str) -> None:
 
 def detect_date_in_name(name: str) -> str | None:
     """Detects a date in the file name and returns it in YYYY-MM-DD format.
+
     Args:
+
         name (str): The file name to search for a date.
         Returns:
             str: The detected date in YYYY-MM-DD format, or None if no date is found.
@@ -108,7 +113,9 @@ def detect_date_in_name(name: str) -> str | None:
 
 def create_movie_nfo(nfo_filename: str, title: str, date: str | None = None) -> None:
     """Creates a basic movie .nfo file.
+
     Args:
+
         nfo_filename (str): Path to the .nfo file to create.
         title (str): Title of the movie.
         date (str): Release date of the movie in YYYY-MM-DD format.
@@ -127,7 +134,9 @@ def create_movie_nfo(nfo_filename: str, title: str, date: str | None = None) -> 
 
 def update_movie_nfo(nfo_filename: str, title: str, date: str | None = None) -> None:
     """Updates an existing movie .nfo file.
+    
     Args:
+    
         nfo_filename (str): Path to the .nfo file to update.
         title (str): Title of the movie.
         date (str): Release date of the movie in YYYY-MM-DD format.
@@ -152,7 +161,9 @@ def update_movie_nfo(nfo_filename: str, title: str, date: str | None = None) -> 
 
 def create_tvshow_nfo(nfo_filename: str) -> None:
     """Creates a basic TV show .nfo file.
+    
     Args:
+    
         nfo_filename (str): Path to the .nfo file to create.
     """
     root = ET.Element("tvshow")
@@ -164,7 +175,9 @@ def create_tvshow_nfo(nfo_filename: str) -> None:
 
 def create_season_nfo(nfo_filename: str) -> None:
     """Creates a basic season .nfo file.
+    
     Args:
+    
         nfo_filename (str): Path to the .nfo file to create.
     """
     root = ET.Element("season")

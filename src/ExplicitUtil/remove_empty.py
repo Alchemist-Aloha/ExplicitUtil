@@ -1,6 +1,6 @@
 import os
 import logging
-
+__docformat__ = "google"
 def setup_logging() -> None:
     """Configure logging format and level"""
     logging.basicConfig(
