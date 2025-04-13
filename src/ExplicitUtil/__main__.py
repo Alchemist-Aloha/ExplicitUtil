@@ -5,6 +5,7 @@ from .recursive_unzip import recursive_unzip
 from .remove_empty import remove_empty_folders
 from .whisper_cpp_transcribe import transcribe_videos
 from .zip_and_move import async_zip_and_move
+from .group_files import group_files_by_string, move_grouped_files
 import importlib.resources
 import os
 from pathlib import Path
@@ -233,6 +234,22 @@ def choice7() -> None:
         print(f"Error zipping and moving folders: {e}")
         return
 
+def choice8() -> None:
+    """group files by regex matching"""
+    directory = Path(input("Enter the directory path: ").strip('"'))
+    print("Default regex pattern: r'(\d{4}-\d{2}-\d{2})'")
+    custom_regex = input("Do you want to use a custom regex pattern? (y/n): ").strip().lower() == 'y'
+    if custom_regex:
+        regex_pattern = input("Enter the regex pattern to match: ").strip('"')
+    else:
+        regex_pattern = r"(\d{4}-\d{2}-\d{2})"
+    grouped_files = group_files_by_string(directory, regex_pattern)
+    for key, files in grouped_files.items():
+        print(f"{key}: {files}")
+    proceed = input("Do you want to move the files to their respective directories? (y/n): ").strip().lower() == 'y'
+    if proceed:
+        move_grouped_files(directory, grouped_files)
+
 def main() -> None:
     while True:
         print("ExplicitUtil CLI")
@@ -243,6 +260,7 @@ def main() -> None:
         print("5. Remove empty folders")
         print("6. Transcribe videos with Whisper.cpp")
         print("7. Zip and move folders")
+        print("8. Group files by regex matching")
         print("Type 'exit' to quit the program.")
 
         choice = input("Choose an option (1-7): ")
