@@ -124,7 +124,7 @@ def choice3() -> None:
             print(f"Config saved to {config_path}")
     # print(NAMER_CONFIG_DEFAULT)
     folder_path = Path(
-        input("Enter the folder path to video files: ")
+        input("Enter the folder path to video files: ").strip('"').strip("'")  # remove quotes
     )  # replace with your directory.
     if not folder_path.is_dir():
         print(f"Error: Directory '{folder_path}' not found.")
