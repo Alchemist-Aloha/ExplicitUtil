@@ -76,6 +76,19 @@ def run_namer_command(
                 check=False,
             )
             print(process.stdout)
+        else:
+            print(f"Successfully processed {directory} from nfo.")
+            # Temporarily, if the nfo processing succeeded, we still run the namer command.
+            command = (
+                f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
+            )
+            process = subprocess.run(
+                ["powershell", "-Command", command],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            print(process.stdout)
         return stdout, stderr, returncode
     except Exception as e:
         return None, str(e), -1
