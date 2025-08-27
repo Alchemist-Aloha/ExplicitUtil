@@ -2,6 +2,8 @@ from pathlib import Path
 import subprocess
 from typing import Union, Tuple
 import platform
+import random
+import asyncio
 import importlib.resources
 __docformat__ = "google"
 def process_video_files(
@@ -24,14 +26,25 @@ def process_video_files(
         print(f"Error: Directory '{root_dir}' not found.")
         return
 
-    for item in root_dir.rglob("*"):  # Use rglob to recursively find all files
-        if (
-            item.is_file()
-            and (item.suffix.lower() in suffix)
-            and str(item.stem).lower().endswith(endswith)
-        ):
-            print(f"Processing file: {item}")
-            run_namer_command(item, namer_config)  # process the parent directory.
+    items = list(root_dir.rglob("*"))  # Use rglob to recursively find all files
+    random.shuffle(items)
+    async def async_run_namer_command(item, namer_config):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, run_namer_command, item, namer_config)
+
+    async def process_all(items, suffix, endswith, namer_config):
+        tasks = []
+        for item in items:
+            if (
+                item.is_file()
+                and (item.suffix.lower() in suffix)
+                and str(item.stem).lower().endswith(endswith)
+            ):
+                print(f"Processing file: {item}")
+                tasks.append(async_run_namer_command(item, namer_config))
+        await asyncio.gather(*tasks)
+
+    asyncio.run(process_all(items, suffix, endswith, namer_config))
 
 
 def run_namer_command(
@@ -50,11 +63,16 @@ def run_namer_command(
     """
     try:
         is_windows = platform.system().lower() == "windows"
+        # print(f"Detected OS: {'Windows' if is_windows else 'Non-Windows'}")
         shell_cmd = (
             f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -i -v'
         )
-        shell = True if not is_windows else False
-        cmd = ["powershell", "-Command", shell_cmd] if is_windows else shell_cmd
+        if is_windows:
+            shell = True
+            cmd = shell_cmd
+        else:
+            shell = False
+            cmd = shell_cmd.split()
 
         print(f"Try loading from nfo. Processing file: {directory}")
         process = subprocess.run(
@@ -69,38 +87,30 @@ def run_namer_command(
         returncode = process.returncode
         print(stdout)
         print(returncode)
-        # if returncode == 0:
-        if returncode:
-            print(f"Error processing {directory} from nfo: {stderr}. Try the PornDB instead.")
-            shell_cmd = (
-                f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
-            )
-            cmd = ["powershell", "-Command", shell_cmd] if is_windows else shell_cmd
-            process = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=False,
-                shell=shell,
-            )
-            print(process.stdout)
+        if returncode==0:
+            print(f"No match processing {directory} from nfo: {stderr}. Try the PornDB again.")
+        if returncode == 1:
+            print(f"Successfully processed {directory} from nfo. Try the PornDB again.")
+        shell_cmd = (
+            f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
+        )
+        cmd = shell_cmd if is_windows else shell_cmd.split()
+        process = subprocess.run(
+            shell_cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+            shell=shell,
+        )
+        print(process.stdout)
+        print(process.returncode)
+        if process.returncode == 1:
+            print(f"Successfully match {directory} with PornDB metadata.")
         else:
-            print(f"Successfully processed {directory} from nfo.")
-            # Temporarily, if the nfo processing succeeded, we still run the namer command.
-            shell_cmd = (
-                f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
-            )
-            cmd = ["powershell", "-Command", shell_cmd] if is_windows else shell_cmd
-            process = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=False,
-                shell=shell,
-            )
-            print(process.stdout)
+            print(f"Failed to match {directory} with PornDB metadata")
         return stdout, stderr, returncode
     except Exception as e:
+        print(f"Exception occurred while processing {directory}: {e}")
         return None, str(e), -1
 
 
