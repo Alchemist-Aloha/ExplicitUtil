@@ -1,6 +1,7 @@
 from pathlib import Path
 import subprocess
 from typing import Union, Tuple
+import platform
 import importlib.resources
 __docformat__ = "google"
 def process_video_files(
@@ -37,8 +38,8 @@ def run_namer_command(
     directory: Path, namer_config: str = ".namer.cfg"
 ) -> tuple[str | None, str, int]:
     """
-    Executes a PowerShell command to process files in a directory.
-    Try fetch from jellyfin generated nfo first. If fails, try to rename using theporndb.net.
+    Executes a shell command to process files in a directory.
+    Tries to fetch from jellyfin generated nfo first. If fails, tries to rename using theporndb.net.
 
     Args:
         directory (Path): The directory to process.
@@ -48,46 +49,54 @@ def run_namer_command(
         tuple: A tuple containing (stdout, stderr, returncode).
     """
     try:
-        print(f"Try loading from nfo. Processing file: {directory}")
-        command = (
+        is_windows = platform.system().lower() == "windows"
+        shell_cmd = (
             f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -i -v'
         )
+        shell = True if not is_windows else False
+        cmd = ["powershell", "-Command", shell_cmd] if is_windows else shell_cmd
+
+        print(f"Try loading from nfo. Processing file: {directory}")
         process = subprocess.run(
-            ["powershell", "-Command", command],
+            cmd,
             capture_output=True,
             text=True,
             check=False,
+            shell=shell,
         )
         stdout = process.stdout
         stderr = process.stderr
         returncode = process.returncode
         print(stdout)
-        # print(stderr)
         print(returncode)
         # if returncode == 0:
         if returncode:
             print(f"Error processing {directory} from nfo: {stderr}. Try the PornDB instead.")
-            command = (
+            shell_cmd = (
                 f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
             )
+            cmd = ["powershell", "-Command", shell_cmd] if is_windows else shell_cmd
             process = subprocess.run(
-                ["powershell", "-Command", command],
+                cmd,
                 capture_output=True,
                 text=True,
                 check=False,
+                shell=shell,
             )
             print(process.stdout)
         else:
             print(f"Successfully processed {directory} from nfo.")
             # Temporarily, if the nfo processing succeeded, we still run the namer command.
-            command = (
+            shell_cmd = (
                 f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
             )
+            cmd = ["powershell", "-Command", shell_cmd] if is_windows else shell_cmd
             process = subprocess.run(
-                ["powershell", "-Command", command],
+                cmd,
                 capture_output=True,
                 text=True,
                 check=False,
+                shell=shell,
             )
             print(process.stdout)
         return stdout, stderr, returncode
