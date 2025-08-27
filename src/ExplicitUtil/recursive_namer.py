@@ -64,7 +64,8 @@ def run_namer_command(
         print(stdout)
         # print(stderr)
         print(returncode)
-        if returncode == 0:
+        # if returncode == 0:
+        if returncode:
             print(f"Error processing {directory} from nfo: {stderr}. Try the PornDB instead.")
             command = (
                 f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
