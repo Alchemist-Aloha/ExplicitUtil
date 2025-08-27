@@ -36,7 +36,7 @@ def process_video_files(
             await loop.run_in_executor(None, run_namer_command, item, namer_config)
 
     async def process_all(items, suffix, endswith, namer_config):
-        semaphore = asyncio.Semaphore(3)  # Limit concurrency to 2
+        semaphore = asyncio.Semaphore(3)  # Limit concurrency to 3
         tasks = []
         for item in items:
             if (
