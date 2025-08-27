@@ -28,11 +28,15 @@ def process_video_files(
 
     items = list(root_dir.rglob("*"))  # Use rglob to recursively find all files
     random.shuffle(items)
-    async def async_run_namer_command(item, namer_config):
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, run_namer_command, item, namer_config)
+
+    async def async_run_namer_command(item, namer_config, semaphore):
+        async with semaphore:
+            print(f"Processing file: {item}") # Moved this line here
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, run_namer_command, item, namer_config)
 
     async def process_all(items, suffix, endswith, namer_config):
+        semaphore = asyncio.Semaphore(3)  # Limit concurrency to 2
         tasks = []
         for item in items:
             if (
@@ -40,8 +44,7 @@ def process_video_files(
                 and (item.suffix.lower() in suffix)
                 and str(item.stem).lower().endswith(endswith)
             ):
-                print(f"Processing file: {item}")
-                tasks.append(async_run_namer_command(item, namer_config))
+                tasks.append(async_run_namer_command(item, namer_config, semaphore))
         await asyncio.gather(*tasks)
 
     asyncio.run(process_all(items, suffix, endswith, namer_config))
