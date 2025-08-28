@@ -49,6 +49,7 @@ def process_video_files(
         await asyncio.gather(*tasks)
 
     asyncio.run(process_all(items, suffix, endswith, namer_config))
+    exit(0)
 
 
 def run_namer_command(
