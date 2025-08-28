@@ -237,7 +237,7 @@ def choice7() -> None:
 def choice8() -> None:
     """group files by regex matching"""
     directory = Path(input("Enter the directory path: ").strip('"'))
-    print("Default regex pattern: r'(\d{4}-\d{2}-\d{2})'")
+    print(r"Default regex pattern: r'(\d{4}-\d{2}-\d{2})'")
     custom_regex = input("Do you want to use a custom regex pattern? (y/n): ").strip().lower() == 'y'
     if custom_regex:
         regex_pattern = input("Enter the regex pattern to match: ").strip('"')

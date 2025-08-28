@@ -5,6 +5,7 @@ import platform
 import random
 import asyncio
 import importlib.resources
+import time
 __docformat__ = "google"
 def process_video_files(
     root_dir: Union[str, Path],
@@ -36,7 +37,7 @@ def process_video_files(
             await loop.run_in_executor(None, run_namer_command, item, namer_config)
 
     async def process_all(items, suffix, endswith, namer_config):
-        semaphore = asyncio.Semaphore(3)  # Limit concurrency to 3
+        semaphore = asyncio.Semaphore(5)  # Limit concurrency to 5
         tasks = []
         for item in items:
             if (
@@ -88,12 +89,13 @@ def run_namer_command(
         stdout = process.stdout
         stderr = process.stderr
         returncode = process.returncode
-        print(stdout)
-        print(returncode)
-        if returncode==0:
-            print(f"No match processing {directory} from nfo: {stderr}. Try the PornDB again.")
+        # print(stdout)
+        #print(returncode)
+        # if returncode==0:
+        #     print(f"NFO: Fail to match {directory} with nfo: {stderr}. Try the PornDB again.")
         if returncode == 1:
-            print(f"Successfully processed {directory} from nfo. Try the PornDB again.")
+            print(f"NFO: Successfully match {directory} with nfo. Try the PornDB again.")
+        time.sleep(random.random()*5+0.5)
         shell_cmd = (
             f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
         )
@@ -106,11 +108,12 @@ def run_namer_command(
             shell=shell,
         )
         print(process.stdout)
-        print(process.returncode)
+        print(process.stderr)
+        #print(process.returncode)
         if process.returncode == 1:
-            print(f"Successfully match {directory} with PornDB metadata.")
+            print(f"PornDB: ✅ Successfully match {directory} with PornDB metadata.")
         else:
-            print(f"Failed to match {directory} with PornDB metadata")
+            print(f"PornDB: Failed to match {directory} with PornDB metadata")
         return stdout, stderr, returncode
     except Exception as e:
         print(f"Exception occurred while processing {directory}: {e}")
