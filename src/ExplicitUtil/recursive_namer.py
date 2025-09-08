@@ -6,6 +6,7 @@ import random
 import asyncio
 import importlib.resources
 import time
+import shlex
 __docformat__ = "google"
 def process_video_files(
     root_dir: Union[str, Path],
@@ -69,15 +70,23 @@ def run_namer_command(
     try:
         is_windows = platform.system().lower() == "windows"
         # print(f"Detected OS: {'Windows' if is_windows else 'Non-Windows'}")
-        shell_cmd = (
-            f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -i -v'
-        )
         if is_windows:
             shell = True
-            cmd = shell_cmd
+            cmd = f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -i -v'
         else:
             shell = False
-            cmd = shell_cmd.split()
+            cmd = [
+            "python",
+            "-m",
+            "namer",
+            "rename",
+            "-c",
+            namer_config,
+            "-f",
+            str(directory),
+            "-i",
+            "-v",
+            ]
 
         print(f"Try loading from nfo. Processing file: {directory}")
         process = subprocess.run(
@@ -97,12 +106,24 @@ def run_namer_command(
         if returncode == 1:
             print(f"NFO: Successfully match {directory} with nfo. Try the PornDB again.")
         time.sleep(random.random()*5+0.5)
-        shell_cmd = (
-            f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
-        )
-        cmd = shell_cmd if is_windows else shell_cmd.split()
+        if is_windows:
+            shell = True
+            cmd = f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
+        else:
+            shell = False
+            cmd = [
+            "python",
+            "-m",
+            "namer",
+            "rename",
+            "-c",
+            namer_config,
+            "-f",
+            str(directory),
+            "-v",
+            ]
         process = subprocess.run(
-            shell_cmd,
+            cmd,
             capture_output=True,
             text=True,
             check=False,
