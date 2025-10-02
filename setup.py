@@ -10,6 +10,7 @@ setup(
         "namer",
         "pillow",
         "toml",
+        "requests",
     ],
     entry_points={
         "console_scripts": [
