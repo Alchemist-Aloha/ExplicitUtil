@@ -36,7 +36,7 @@ This library provides tools for managing media content, with features for video 
 pip install namer
 ```
 
-Fill your PornDB API into `.namer.cfg`.
+Fill your API key into `.namer.cfg`.
 
 #### Install [ImageMagick](https://imagemagick.org/script/download.php) to use `convert_pic_to_webp.py`
 
