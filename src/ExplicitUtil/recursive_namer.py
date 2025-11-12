@@ -38,7 +38,7 @@ def process_video_files(
             await loop.run_in_executor(None, run_namer_command, item, namer_config)
 
     async def process_all(items, suffix, endswith, namer_config):
-        semaphore = asyncio.Semaphore(5)  # Limit concurrency to 5
+        semaphore = asyncio.Semaphore(2)  # Limit concurrency to 2
         tasks = []
         for item in items:
             if (
@@ -99,7 +99,7 @@ def run_namer_command(
         stdout = process.stdout
         stderr = process.stderr
         returncode = process.returncode
-        # print(stdout)
+        print(stdout)
         #print(returncode)
         # if returncode==0:
         #     print(f"NFO: Fail to match {directory} with nfo: {stderr}. Try the PornDB again.")
