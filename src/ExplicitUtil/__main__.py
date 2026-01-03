@@ -250,6 +250,13 @@ def choice8() -> None:
     if proceed:
         move_grouped_files(directory, grouped_files)
 
+def choice9() -> None:
+    """merge videos"""
+    from .merge_videos import merge_videos
+    video_files_input = input("Enter the video file paths to merge, separated by commas: ")
+    video_files = [file.strip().strip('"').strip("'") for file in video_files_input.split(",")]
+    output_file = input("Enter the output merged video file path: ").strip('"').strip("'")
+    merge_videos(video_files, output_file)
 def main() -> None:
     while True:
         print("ExplicitUtil CLI")
@@ -261,9 +268,10 @@ def main() -> None:
         print("6. Transcribe videos with Whisper.cpp")
         print("7. Zip and move folders")
         print("8. Group files by regex matching")
+        print("9. Merge videos using ffmpeg")
         print("Type 'exit' to quit the program.")
 
-        choice = input("Choose an option (1-7): ")
+        choice = input("Choose an option (1-9): ")
         if choice.lower() == "exit":
             print("Exiting...")
             break
@@ -287,6 +295,10 @@ def main() -> None:
             choice6()
         elif choice == 7:
             choice7()
+        elif choice == 8:
+            choice8()
+        elif choice == 9:
+            choice9()
         else:
             print("Invalid choice. Please try again.")
             continue
