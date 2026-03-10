@@ -1,307 +1,266 @@
+import typer
+from typing import Optional, List, Any
+from pathlib import Path
+import asyncio
+import os
+import toml
+import importlib.resources
 from .convert_pic_to_webp import convert_pic_to_webp_multithreaded
-from .nfo_tool import generate_nfo
+from .nfo_tool import generate_nfo, batch_add_tag, batch_add_actor
 from .recursive_namer import process_video_files
 from .recursive_unzip import recursive_unzip
 from .remove_empty import remove_empty_folders
 from .whisper_cpp_transcribe import transcribe_videos
 from .zip_and_move import async_zip_and_move
 from .group_files import group_files_by_string, move_grouped_files
-import importlib.resources
-import os
-from pathlib import Path
-import asyncio
-import toml
 
-__docformat__ = "google"
-def choice1() -> None:
-    """Convert images to WebP format."""
-    config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/convert_pic_to_webp.toml')))
+app = typer.Typer(help="ExplicitUtil: A utility library for managing media files.")
+
+def get_config_path(config_name: str) -> Path:
+    config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath(f'config/{config_name}.toml')))
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    default_config = {"num_threads": 6, "timeout": 10, "quality": 80}
-    use_config = False
-    # Load configuration from file if available
-    if config_path.is_file():
-        use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
-        if use_config:
-            # Load the config file
-            try:
-                config = toml.load(config_path)
-                default_config.update({k: config.get(k, v) for k, v in default_config.items()})
+    return config_path
 
-            except Exception as e:
-                print(f"Error loading config file: {e}")
-                return
-            
-    if not config_path.is_file() or not use_config:
-        print("Config file not found. Using manual input.")
-        # Prompt for settings if not using config
-        for key, default in default_config.items():
-            value = input(f"Enter {key.replace('_', ' ')} (default: {default}): ").strip()
-            if value:
-                try:
-                    default_config[key] = int(value)
-                except ValueError:
-                    print(f"Invalid input for {key}. Using default: {default}.")
+def load_config(config_name: str, default_values: dict) -> dict:
+    config_path = get_config_path(config_name)
+    if config_path.is_file():
+        try:
+            config = toml.load(config_path)
+            return {**default_values, **config}
+        except Exception as e:
+            typer.echo(f"Error loading config file: {e}", err=True)
+    return default_values
+
+def save_config(config_name: str, config_values: dict):
+    config_path = get_config_path(config_name)
+    try:
         with open(config_path, "w") as config_file:
-            toml.dump(default_config, config_file)
-            print(f"Config saved to {config_path}")
-    folder_path = input("Enter the folder path to convert picture files: ").strip('"')
-    if not Path(folder_path).exists():
-        print(f"Error: Folder '{folder_path}' does not exist.")
-        return
+            toml.dump(config_values, config_file)
+        typer.echo(f"Config saved to {config_path}")
+    except Exception as e:
+        typer.echo(f"Error saving config file: {e}", err=True)
+
+def merge_settings(config_name: str, cli_settings: dict, defaults: dict) -> dict:
+    stored_settings = load_config(config_name, defaults)
+    final_settings = {**stored_settings, **{k: v for k, v in cli_settings.items() if v is not None}}
+    return final_settings
+
+@app.command()
+def convert_pic(
+    folder_path: Path = typer.Argument(..., help="Folder path to convert images"),
+    num_threads: Optional[int] = typer.Option(None, help="Number of threads (default: 6)"),
+    timeout: Optional[int] = typer.Option(None, help="Timeout in seconds (default: 10)"),
+    quality: Optional[int] = typer.Option(None, help="WebP quality (default: 80)"),
+    save: bool = typer.Option(False, "--save", help="Save these settings to config"),
+):
+    """Convert images to WebP format. Uses stored config by default."""
+    config_name = "convert_pic_to_webp"
+    defaults = {"num_threads": 6, "timeout": 10, "quality": 80}
+    cli_settings = {"num_threads": num_threads, "timeout": timeout, "quality": quality}
+    settings = merge_settings(config_name, cli_settings, defaults)
+    if save: save_config(config_name, settings)
+
+    if not folder_path.exists():
+        typer.echo(f"Error: Folder '{folder_path}' does not exist.", err=True)
+        raise typer.Exit(1)
 
     try:
         convert_pic_to_webp_multithreaded(
-            folder_path=folder_path,
-            num_threads=default_config["num_threads"],
-            timeout=default_config["timeout"],
-            quality=default_config["quality"],
+            folder_path=str(folder_path),
+            num_threads=settings["num_threads"],
+            timeout=settings["timeout"],
+            quality=settings["quality"],
         )
     except Exception as e:
-        print(f"Error converting files: {e}")
+        typer.echo(f"Error converting files: {e}", err=True)
 
-def choice2() -> None:
-    """generate nfo files"""
-    media_path = input("Enter the media directory path: ")
-    if not Path(media_path).exists():
-        print(f"Error: Media directory '{media_path}' does not exist.")
-        return
-    media_type = input("Enter the media type (movie, episode, musicvideo): ")
-    output_dir = input("Enter the output directory path: ")
-    if not Path(output_dir).exists():
-        print(f"Output directory '{output_dir}' does not exist. Makeing it now.")
-        try:
-            os.makedirs(output_dir)
-        except Exception as e:
-            print(f"Error creating output directory: {e}")
-            return
-    try:
-        generate_nfo(media_path, media_type, output_dir)
-        return
-    except Exception as e:
-        print(f"Error generating NFO files: {e}")
-        return
+@app.command()
+def nfo(
+    media_path: Path = typer.Argument(..., help="Media directory path"),
+    output_dir: Optional[Path] = typer.Option(None, help="Output directory path"),
+):
+    """Generate movie NFO files for media."""
+    if not media_path.exists():
+        typer.echo(f"Error: Media directory '{media_path}' does not exist.", err=True)
+        raise typer.Exit(1)
     
-
-def choice3() -> None:
-    """process video files"""
-    NAMER_CONFIG_DEFAULT = str(importlib.resources.files('ExplicitUtil').joinpath('config/.namer.cfg'))
-    default_config = {"namer_config_path":NAMER_CONFIG_DEFAULT,"suffix": (".m4v", ".mp4"), "endswith": ""}
-    # Load configuration from file if available
-    config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/recursive_namer.toml')))
-    use_config = False
-    if Path(config_path).is_file():
-        use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
-        if use_config:
-            try:
-                config = toml.load(config_path)
-                default_config.update({k: config.get(k, v) for k, v in default_config.items()})
-            except Exception as e:
-                print(f"Error loading config file: {e}")
-                return
-    if not Path(config_path).is_file() or not use_config:
-        print("Config file not found. Using manual input.")
-        # Prompt for settings if not using config
-
-        for key, default in default_config.items():
-            if key == "endswith":
-                print("Enter NOT case sensitive endswith string (e.g., _1080p_WEBDL):")
-            if key == "suffix":
-                print("Enter NOT case sensitive suffix strings split with comma (e.g., .m4v,.mp4):")
-            print("Enter 'default' to use default value")
-            value = input(f"Enter {key.replace('_', ' ')} (default: {default}): ").strip()
-            if value == "default":
-                value = default_config[key]
-            if value:
-                if key == "suffix" and value is str:
-                    value = tuple(ext.strip() for ext in value.split(","))
-                default_config[key] = value
-        if not Path(default_config["namer_config_path"]).is_file():
-            print(f"Error: Configuration file '{default_config['namer_config_path']}' not found.")
-            return
-        with open(config_path, "w") as config_file:
-            toml.dump(default_config, config_file)
-            print(f"Config saved to {config_path}")
-    # print(NAMER_CONFIG_DEFAULT)
-    folder_path = Path(
-        input("Enter the folder path to video files: ").strip('"').strip("'")  # remove quotes
-    )  # replace with your directory.
-    if not folder_path.is_dir():
-        print(f"Error: Directory '{folder_path}' not found.")
-        return
+    out_dir = output_dir or media_path
+    if not out_dir.exists():
+        typer.echo(f"Output directory '{out_dir}' does not exist. Creating it.")
+        out_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        process_video_files(root_dir=folder_path, namer_config=default_config['namer_config_path'], suffix=default_config["suffix"], endswith=default_config["endswith"])
-        return
+        generate_nfo(str(media_path), str(out_dir))
     except Exception as e:
-        print(f"Error processing video files: {e}")
-        return
+        typer.echo(f"Error generating NFO files: {e}", err=True)
 
-def choice4() -> None:
-    """unzip files recursively"""
-    folder_path = Path(input("Enter the folder path to unzip files: ").strip('"'))
-    delete_zips = input("Delete ZIP archives after unzipping? (y/n): ").strip().lower()=='y'
+@app.command()
+def nfo_tag(
+    nfo_dir: Path = typer.Argument(..., help="Directory containing .nfo files"),
+    tag: str = typer.Argument(..., help="Tag name to add"),
+):
+    """Batch add a tag to NFO files."""
+    if not nfo_dir.is_dir():
+        typer.echo(f"Error: Directory '{nfo_dir}' not found.", err=True)
+        raise typer.Exit(1)
+    batch_add_tag(nfo_dir, tag)
 
+@app.command()
+def nfo_actor(
+    nfo_dir: Path = typer.Argument(..., help="Directory containing .nfo files"),
+    name: str = typer.Argument(..., help="Actor/Artist name"),
+    role: Optional[str] = typer.Option(None, help="Role of the actor"),
+):
+    """Batch add an actor/artist to NFO files."""
+    if not nfo_dir.is_dir():
+        typer.echo(f"Error: Directory '{nfo_dir}' not found.", err=True)
+        raise typer.Exit(1)
+    batch_add_actor(nfo_dir, name, role=role)
+
+@app.command()
+def rename(
+    folder_path: Path = typer.Argument(..., help="Folder path to video files"),
+    namer_config: Optional[Path] = typer.Option(None, help="Path to namer config file"),
+    suffix: Optional[str] = typer.Option(None, help="Suffixes to process (comma-separated, default: .m4v,.mp4)"),
+    endswith: Optional[str] = typer.Option(None, help="Endswith string (case-insensitive)"),
+    save: bool = typer.Option(False, "--save", help="Save these settings to config"),
+):
+    """Batch rename video files with namer. Uses stored config by default."""
+    config_name = "recursive_namer"
+    default_namer_path = str(importlib.resources.files('ExplicitUtil').joinpath('config/.namer.cfg'))
+    defaults = {"namer_config_path": default_namer_path, "suffix": [".m4v", ".mp4"], "endswith": ""}
+    cli_settings = {}
+    if namer_config: cli_settings["namer_config_path"] = str(namer_config)
+    if suffix: cli_settings["suffix"] = [ext.strip() for ext in suffix.split(",")]
+    if endswith is not None: cli_settings["endswith"] = endswith
+    settings = merge_settings(config_name, cli_settings, defaults)
+    if save: save_config(config_name, settings)
+
+    if not folder_path.is_dir():
+        typer.echo(f"Error: Directory '{folder_path}' not found.", err=True)
+        raise typer.Exit(1)
+
+    try:
+        process_video_files(
+            root_dir=folder_path,
+            namer_config=settings['namer_config_path'],
+            suffix=tuple(settings["suffix"]),
+            endswith=settings["endswith"]
+        )
+    except Exception as e:
+        typer.echo(f"Error processing video files: {e}", err=True)
+
+@app.command()
+def unzip(
+    folder_path: Path = typer.Argument(..., help="Folder path to unzip files"),
+    delete_zips: bool = typer.Option(False, "--delete", "-d", help="Delete ZIP archives after unzipping"),
+):
+    """Unzip files recursively."""
     if not folder_path.exists():
-        print(f"Error: Folder '{folder_path}' does not exist.")
-        return
+        typer.echo(f"Error: Folder '{folder_path}' does not exist.", err=True)
+        raise typer.Exit(1)
 
     try:
         recursive_unzip(folder_path, delete_zips)
-        return
     except Exception as e:
-        print(f"Error unzipping files: {e}")
-        return
+        typer.echo(f"Error unzipping files: {e}", err=True)
 
-
-def choice5() -> None:
-    """remove empty folders"""
-    target_dir = input("Please enter the target directory: ").strip("\"")
-    dry_run = input("Do you want to perform a dry run? (y/n): ").strip().lower() == 'y'
-    
-    if not Path(target_dir).exists():
-        print(f"Error: Folder '{target_dir}' does not exist.")
-        return
+@app.command()
+def remove_empty(
+    target_dir: Path = typer.Argument(..., help="Target directory"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Perform a dry run"),
+):
+    """Remove empty folders."""
+    if not target_dir.exists():
+        typer.echo(f"Error: Folder '{target_dir}' does not exist.", err=True)
+        raise typer.Exit(1)
     
     try:
-        remove_empty_folders(target_dir, dry_run)
-        return
+        remove_empty_folders(str(target_dir), dry_run)
     except Exception as e:
-        print(f"Error removing empty folders: {e}")
-        return
+        typer.echo(f"Error removing empty folders: {e}", err=True)
 
+@app.command()
+def transcribe(
+    input_folder: Path = typer.Argument(..., help="Folder path to video files"),
+    whisper_root: Optional[Path] = typer.Option(None, help="Path to whisper.cpp root directory"),
+    prompt: Optional[str] = typer.Option(None, help="Prompt for Whisper transcription"),
+    suffix: Optional[str] = typer.Option(None, help="Suffixes to process (comma-separated, default: .m4v,.mp4,.mkv)"),
+    save: bool = typer.Option(False, "--save", help="Save these settings to config"),
+):
+    """Transcribe videos with Whisper.cpp. Uses stored config by default."""
+    config_name = "whisper_cpp_transcribe"
+    defaults = {"whisper_root": "", "suffix": [".m4v", ".mp4", ".mkv"], "prompt": ""}
+    cli_settings = {}
+    if whisper_root: cli_settings["whisper_root"] = str(whisper_root)
+    if prompt is not None: cli_settings["prompt"] = prompt
+    if suffix: cli_settings["suffix"] = [ext.strip() for ext in suffix.split(",")]
+    settings = merge_settings(config_name, cli_settings, defaults)
+    if save: save_config(config_name, settings)
 
-def choice6() -> None:
-    """transcribe videos with Whisper.cpp"""
-    config_path = Path(str(importlib.resources.files('ExplicitUtil').joinpath('config/whisper_cpp_transcribe.toml')))
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    default_config = {"whisper_root": "", "suffix": (".m4v", ".mp4"), "prompt": ""}
-    use_config = False
-    # Load configuration from file if available
-    if config_path.is_file():
-        use_config = input("Use stored config for settings? (y/n): ").strip().lower() == "y"
-        if use_config:
-            try:
-                config = toml.load(config_path)
-                default_config.update({k: config.get(k, v) for k, v in default_config.items()})           
-            except Exception as e:
-                print(f"Error loading config file: {e}")
-                return
-    if not config_path.is_file() or not use_config:
-        print("Using manual input.")
-        # Prompt for settings if not using config
-        for key, default in default_config.items():
-            if key == "whisper_root":
-                print("Enter the path to the whisper.cpp root directory ():")
-            if key == "prompt":
-                print("Enter the prompt for Whisper transcription:")
-            if key == "suffix":
-                print("Enter NOT case sensitive suffix strings split with comma (e.g., .m4v,.mp4):")
-            print("Enter 'default' to use default value")
-            value = input(f"Enter {key.replace('_', ' ')} (default: {default}): ").strip()
-            if value == "default":
-                value = default_config[key]
-            if value:
-                if key == "suffix" and value is str:
-                    value = tuple(ext.strip() for ext in value.split(","))
-                default_config[key] = value
-        if not Path(default_config["whisper_root"]).is_dir():
-            print(f"Error: Directory '{default_config['whisper_root']}' not found.")
-            return
-        with open(config_path, "w") as config_file:
-            toml.dump(default_config, config_file)
-            print(f"Config saved to {config_path}")
-    input_folder= input("Enter the folder path to video files: ").strip('"')
-    transcribe_videos(input_folder, default_config["whisper_root"], prompt=default_config["prompt"], suffix=default_config["suffix"])
-    return
+    if not settings["whisper_root"]:
+        typer.echo("Error: whisper_root is required. Use --whisper-root or set it in config.", err=True)
+        raise typer.Exit(1)
 
+    try:
+        transcribe_videos(str(input_folder), settings["whisper_root"], prompt=settings["prompt"], suffix=tuple(settings["suffix"]))
+    except Exception as e:
+        typer.echo(f"Error transcribing videos: {e}", err=True)
 
-
-def choice7() -> None:
-    """zip and move folders"""
-    source_folder = Path(input("Enter the source folder path: ").strip("\""))
+@app.command()
+def archive(
+    source_folder: Path = typer.Argument(..., help="Source folder path"),
+    destination_folder: Path = typer.Argument(..., help="Destination folder path"),
+):
+    """Zip and move folders asynchronously."""
     if not source_folder.is_dir():
-        print(f"The folder '{source_folder}' does not exist.")
-        return
-    destination_folder = Path(input("Enter the destination folder path: "))
+        typer.echo(f"Error: Source folder '{source_folder}' does not exist.", err=True)
+        raise typer.Exit(1)
+    
     if not destination_folder.is_dir():
-        print(f"The folder '{destination_folder}' does not exist.")
+        typer.echo(f"Destination folder '{destination_folder}' does not exist. Creating it.")
         destination_folder.mkdir(parents=True, exist_ok=True)
+
     try:
         asyncio.run(async_zip_and_move(source_folder, destination_folder))
-        return
     except Exception as e:
-        print(f"Error zipping and moving folders: {e}")
-        return
+        typer.echo(f"Error archiving folders: {e}", err=True)
 
-def choice8() -> None:
-    """group files by regex matching"""
-    directory = Path(input("Enter the directory path: ").strip('"'))
-    print(r"Default regex pattern: r'(\d{4}-\d{2}-\d{2})'")
-    custom_regex = input("Do you want to use a custom regex pattern? (y/n): ").strip().lower() == 'y'
-    if custom_regex:
-        regex_pattern = input("Enter the regex pattern to match: ").strip('"')
-    else:
-        regex_pattern = r"(\d{4}-\d{2}-\d{2})"
-    grouped_files = group_files_by_string(directory, regex_pattern)
+@app.command()
+def group(
+    directory: Path = typer.Argument(..., help="Directory path to group files"),
+    regex: str = typer.Option(r"(\d{4}-\d{2}-\d{2})", help="Regex pattern to match"),
+    move: bool = typer.Option(False, "--move", "-m", help="Move files after grouping"),
+):
+    """Group files by regex matching."""
+    if not directory.is_dir():
+        typer.echo(f"Error: Directory '{directory}' not found.", err=True)
+        raise typer.Exit(1)
+
+    grouped_files = group_files_by_string(directory, regex)
     for key, files in grouped_files.items():
-        print(f"{key}: {files}")
-    proceed = input("Do you want to move the files to their respective directories? (y/n): ").strip().lower() == 'y'
-    if proceed:
+        typer.echo(f"{key}: {len(files)} files")
+    
+    if move:
         move_grouped_files(directory, grouped_files)
+        typer.echo("Files moved successfully.")
+    else:
+        typer.echo("Dry run complete. Use --move to actually move files.")
 
-def choice9() -> None:
-    """merge videos"""
+@app.command()
+def merge(
+    video_files: List[str] = typer.Argument(..., help="List of video file paths to merge"),
+    output_file: Path = typer.Argument(..., help="Output merged video file path"),
+):
+    """Merge videos using ffmpeg."""
     from .merge_videos import merge_videos
-    video_files_input = input("Enter the video file paths to merge, separated by commas: ")
-    video_files = [file.strip().strip('"').strip("'") for file in video_files_input.split(",")]
-    output_file = input("Enter the output merged video file path: ").strip('"').strip("'")
-    merge_videos(video_files, output_file)
-def main() -> None:
-    while True:
-        print("ExplicitUtil CLI")
-        print("1. Convert images to WebP")
-        print("2. Generate NFO files")
-        print("3. Batch rename video files with namer")
-        print("4. Unzip files recursively")
-        print("5. Remove empty folders")
-        print("6. Transcribe videos with Whisper.cpp")
-        print("7. Zip and move folders")
-        print("8. Group files by regex matching")
-        print("9. Merge videos using ffmpeg")
-        print("Type 'exit' to quit the program.")
+    try:
+        merge_videos(video_files, str(output_file))
+    except Exception as e:
+        typer.echo(f"Error merging videos: {e}", err=True)
 
-        choice = input("Choose an option (1-9): ")
-        if choice.lower() == "exit":
-            print("Exiting...")
-            break
-        try:
-            choice = int(choice)
-        except ValueError:
-            print("Invalid input. Please enter a number between 1 and 7.")
-            continue
-
-        if choice == 1:
-            choice1()
-        elif choice == 2:
-            choice2()
-        elif choice == 3:
-            choice3()
-        elif choice == 4:
-            choice4()
-        elif choice == 5:
-            choice5()
-        elif choice == 6:
-            choice6()
-        elif choice == 7:
-            choice7()
-        elif choice == 8:
-            choice8()
-        elif choice == 9:
-            choice9()
-        else:
-            print("Invalid choice. Please try again.")
-            continue
+def main():
+    app()
 
 if __name__ == "__main__":
     main()

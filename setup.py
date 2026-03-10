@@ -11,6 +11,7 @@ setup(
         "pillow",
         "toml",
         "requests",
+        "typer[all]",
     ],
     entry_points={
         "console_scripts": [
