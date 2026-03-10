@@ -6,7 +6,7 @@ import os
 import toml
 import importlib.resources
 from .convert_pic_to_webp import convert_pic_to_webp_multithreaded
-from .nfo_tool import generate_nfo, batch_add_tag, batch_add_actor
+from .nfo_tool import generate_nfo, batch_add_tag, batch_add_actor, batch_add_studio
 from .recursive_namer import process_video_files
 from .recursive_unzip import recursive_unzip
 from .remove_empty import remove_empty_folders
@@ -104,6 +104,17 @@ def nfo_tag(
         typer.echo(f"Error: Directory '{nfo_dir}' not found.", err=True)
         raise typer.Exit(1)
     batch_add_tag(nfo_dir, tag)
+
+@app.command()
+def nfo_studio(
+    nfo_dir: Path = typer.Argument(..., help="Directory containing .nfo files"),
+    studio: str = typer.Argument(..., help="Studio name to set"),
+):
+    """Batch set a studio in NFO files."""
+    if not nfo_dir.is_dir():
+        typer.echo(f"Error: Directory '{nfo_dir}' not found.", err=True)
+        raise typer.Exit(1)
+    batch_add_studio(nfo_dir, studio)
 
 @app.command()
 def nfo_actor(

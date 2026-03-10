@@ -5,6 +5,25 @@ from typing import Optional
 
 __docformat__ = "google"
 
+VIDEO_EXTENSIONS = (".m4v", ".mp4", ".mkv", ".avi", ".mov", ".iso", ".vob", ".m2ts")
+
+def ensure_movie_root(root: ET.Element) -> ET.Element:
+    """Ensures the root tag is 'movie'."""
+    if root.tag != "movie":
+        root.tag = "movie"
+    return root
+
+def ensure_nfos_for_videos(directory: Path) -> None:
+    """Scans for video files and creates a basic .nfo if it doesn't exist."""
+    for file_path in directory.rglob("*"):
+        if file_path.is_file() and file_path.suffix.lower() in VIDEO_EXTENSIONS:
+            nfo_path = file_path.with_suffix(".nfo")
+            if not nfo_path.exists():
+                base_name = file_path.stem
+                date = detect_date_in_name(base_name)
+                create_movie_nfo(str(nfo_path), base_name, date)
+                print(f"Created missing NFO for: {file_path.name}")
+
 def process_single_file(file_path: Path, output_path: Path) -> None:
     """Processes a single media file to generate or update its .nfo file as a movie."""
     base_name = file_path.stem
@@ -24,9 +43,7 @@ def generate_nfo(media_path: str, output_dir: str) -> None:
     media_path_obj = Path(media_path)
 
     for file_path in media_path_obj.rglob("*"):
-        if file_path.is_file() and file_path.suffix.lower() in (
-            ".m4v", ".mp4", ".mkv", ".avi", ".mov", ".iso", ".vob", ".m2ts",
-        ):
+        if file_path.is_file() and file_path.suffix.lower() in VIDEO_EXTENSIONS:
             relative_path = file_path.relative_to(media_path_obj)
             file_output_path = output_path / relative_path.parent
             file_output_path.mkdir(parents=True, exist_ok=True)
@@ -67,11 +84,7 @@ def create_movie_nfo(nfo_filename: str, title: str, date: str | None = None) -> 
 def update_movie_nfo(nfo_filename: str, title: str, date: str | None = None) -> None:
     try:
         tree = ET.parse(nfo_filename)
-        root = tree.getroot()
-        if root.tag != "movie":
-            # If it's not a movie NFO, we might want to convert or skip.
-            # For simplicity, we'll ensure it has movie tag if we are treating all as movie.
-            root.tag = "movie"
+        root = ensure_movie_root(tree.getroot())
         
         if root.find("title") is None:
             ET.SubElement(root, "title").text = title
@@ -85,12 +98,14 @@ def update_movie_nfo(nfo_filename: str, title: str, date: str | None = None) -> 
 
 
 def batch_add_tag(nfo_dir: Path | str, tag_name: str) -> None:
-    """Adds a tag to all .nfo files in a directory if it doesn't already exist."""
+    """Adds a tag to all .nfo files in a directory. Creates NFOs for videos if missing."""
     nfo_path_obj = Path(nfo_dir)
+    ensure_nfos_for_videos(nfo_path_obj)
+    
     for file_path in nfo_path_obj.rglob("*.nfo"):
         try:
             tree = ET.parse(str(file_path))
-            root = tree.getroot()
+            root = ensure_movie_root(tree.getroot())
             modified = False
             
             existing_tags = [t.text for t in root.findall("tag") if t.text]
@@ -104,6 +119,31 @@ def batch_add_tag(nfo_dir: Path | str, tag_name: str) -> None:
         except ET.ParseError:
             print(f"Error parsing {file_path.name}. Skipping.")
 
+def batch_add_studio(nfo_dir: Path | str, studio_name: str) -> None:
+    """Adds a studio to all .nfo files in a directory under <movie> root."""
+    nfo_path_obj = Path(nfo_dir)
+    ensure_nfos_for_videos(nfo_path_obj)
+    
+    for file_path in nfo_path_obj.rglob("*.nfo"):
+        try:
+            tree = ET.parse(str(file_path))
+            root = ensure_movie_root(tree.getroot())
+            modified = False
+            
+            studio_elem = root.find("studio")
+            if studio_elem is None:
+                ET.SubElement(root, "studio").text = studio_name
+                modified = True
+            elif studio_elem.text != studio_name:
+                studio_elem.text = studio_name
+                modified = True
+            
+            if modified:
+                tree.write(str(file_path), encoding="utf-8", xml_declaration=True)
+                print(f"Set studio to '{studio_name}' in {file_path.name}")
+        except ET.ParseError:
+            print(f"Error parsing {file_path.name}. Skipping.")
+
 def batch_add_actor(
     nfo_dir: Path | str, 
     name: str, 
@@ -111,12 +151,14 @@ def batch_add_actor(
     type_actor: str = "Actor", 
     thumb: Optional[str] = None
 ) -> None:
-    """Adds an actor/artist to all .nfo files in a directory if they don't already exist."""
+    """Adds an actor/artist to all .nfo files in a directory. Creates NFOs for videos if missing."""
     nfo_path_obj = Path(nfo_dir)
+    ensure_nfos_for_videos(nfo_path_obj)
+    
     for file_path in nfo_path_obj.rglob("*.nfo"):
         try:
             tree = ET.parse(str(file_path))
-            root = tree.getroot()
+            root = ensure_movie_root(tree.getroot())
             modified = False
             
             existing_actors = []
@@ -154,10 +196,11 @@ def batch_add_attribute(
         batch_add_actor(nfo_dir, value, role, type_actor, thumb)
     else:
         nfo_path_obj = Path(nfo_dir)
+        ensure_nfos_for_videos(nfo_path_obj)
         for file_path in nfo_path_obj.rglob("*.nfo"):
             try:
                 tree = ET.parse(str(file_path))
-                root = tree.getroot()
+                root = ensure_movie_root(tree.getroot())
                 if root.find(attribute) is None or root.find(attribute).text != value:
                     ET.SubElement(root, attribute).text = value
                     tree.write(str(file_path), encoding="utf-8", xml_declaration=True)
