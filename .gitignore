@@ -66,3 +66,4 @@ __pycache__/
 /database/
 
 test_*
+.venv/

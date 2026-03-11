@@ -48,9 +48,17 @@ Compile the code based on your inference hardware.
 
 ### Install `ExplicitUtil`
 
+**Recommended (using [uv](https://github.com/astral-sh/uv)):**
+
 ```bash
 git clone https://github.com/Alchemist-Aloha/ExplicitUtil.git
 cd ExplicitUtil
+uv sync
+```
+
+**Using pip:**
+
+```bash
 pip install -e .
 ```
 
@@ -67,23 +75,38 @@ You can run the code in Jupyter Notebook. The library is designed to be used int
 
 ### Using Command Line
 
-You can run the code from the command line.
+You can run the code from the command line using the `ExplicitUtil` entry point or as a module.
 
 ```bash
+# Get help
+ExplicitUtil --help
+
 # Transcribe videos
-python -m ExplicitUtil.whisper_cpp_transcribe
+ExplicitUtil transcribe [FOLDER]
 # Convert images to WebP
-python -m ExplicitUtil.convert_pic_to_webp
-# Zip and archive pictures
-python -m ExplicitUtil.zip_and_move
+ExplicitUtil convert-pic [FOLDER]
+# Zip and archive folders
+ExplicitUtil archive [SOURCE] [DESTINATION]
 # Unzip and extract
-python -m ExplicitUtil.recursive_unzip
+ExplicitUtil unzip [FOLDER]
 # Generate metadata
-python -m ExplicitUtil.nfo_tool
+ExplicitUtil nfo [MEDIA_PATH]
 # Batch add metadata using namer
-python -m ExplicitUtil.recursive_namer
+ExplicitUtil rename [FOLDER]
 # Remove empty folders
-python -m ExplicitUtil.remove_empty
+ExplicitUtil remove-empty [TARGET_DIR]
+# Group files
+ExplicitUtil group [DIRECTORY]
+# Merge videos
+ExplicitUtil merge [VIDEO_FILES]... [OUTPUT_FILE]
+```
+
+Alternatively, using `python -m`:
+
+```bash
+python -m ExplicitUtil.whisper_cpp_transcribe
+python -m ExplicitUtil.convert_pic_to_webp
+# ... and so on
 ```
 
 ## License
