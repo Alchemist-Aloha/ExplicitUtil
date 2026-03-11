@@ -53,9 +53,9 @@ def generate_nfo(media_path: str, output_dir: str) -> None:
 def detect_date_in_name(name: str) -> Optional[str]:
     """Detects a date in the file name and returns it in YYYY-MM-DD format."""
     date_patterns = [
-        r"(\d{4})[-_.](\d{2})[-_.](\d{2})",
-        r"(\d{2})[-_.](\d{2})[-_.](\d{4})",
-        r"(\d{2})[-._](\d{2})[-._](\d{2})",
+        r"(?<!\d)(\d{4})[-_.](\d{2})[-_.](\d{2})(?!\d)",
+        r"(?<!\d)(\d{2})[-_.](\d{2})[-_.](\d{4})(?!\d)",
+        r"(?<!\d)(\d{2})[-._](\d{2})[-._](\d{2})(?!\d)",
     ]
     for pattern in date_patterns:
         match = re.search(pattern, name)
