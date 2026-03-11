@@ -27,7 +27,7 @@ def zip_directory(folder: Path, zip_path: Path) -> None:
         zip_path (Path): The path where the zip file will be saved.
     """
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for file in folder.rglob("*"):  # Recursively get all files
+        for file in folder.iterdir():  # Iterating directly over files in leaf directory
             if file.is_file():  # Only include files, not directories
                 zipf.write(file, file.relative_to(folder.parent))
 
