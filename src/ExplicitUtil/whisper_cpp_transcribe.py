@@ -148,23 +148,6 @@ def whisper_worker() -> None:
         ]
 
         print(f"[Whisper] Running command: {' '.join(whisper_cmd)}")
-        # try:
-        #     process = subprocess.run(whisper_cmd, text=True, capture_output=True)
-        #     print(f"[Whisper] Transcription completed for {video_file}.")
-        #     print(process.stdout)
-        # except subprocess.CalledProcessError as e:
-        #     print(f"[Whisper] Error processing {video_file}: {e.stderr}")
-        #     whisper_queue.task_done()
-        #     continue
-
-        # # Remove temporary audio file
-        # try:
-        #     audio_file.unlink()
-        #     print(f"[Whisper] Removed temporary audio file {audio_file}")
-        # except Exception as e:
-        #     print(f"[Whisper] Could not remove audio file {audio_file}: {e}")
-
-        # whisper_queue.task_done()
         process = None  # Initialize process variable for cleanup
         success = False  # Initialize success variable
         try:
