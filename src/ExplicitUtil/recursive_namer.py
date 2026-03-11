@@ -68,14 +68,8 @@ def run_namer_command(
         tuple: A tuple containing (stdout, stderr, returncode).
     """
     try:
-        is_windows = platform.system().lower() == "windows"
-        # print(f"Detected OS: {'Windows' if is_windows else 'Non-Windows'}")
-        if is_windows:
-            shell = True
-            cmd = f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -i -v'
-        else:
-            shell = False
-            cmd = [
+        # print(f"Detected OS: {platform.system()}")
+        cmd = [
             "python",
             "-m",
             "namer",
@@ -86,7 +80,7 @@ def run_namer_command(
             str(directory),
             "-i",
             "-v",
-            ]
+        ]
 
         print(f"Try loading from nfo. Processing file: {directory}")
         process = subprocess.run(
@@ -94,7 +88,7 @@ def run_namer_command(
             capture_output=True,
             text=True,
             check=False,
-            shell=shell,
+            shell=False,
         )
         stdout = process.stdout
         stderr = process.stderr
@@ -106,12 +100,7 @@ def run_namer_command(
         if returncode == 1:
             print(f"NFO: Successfully match {directory} with nfo. Try the PornDB again.")
         time.sleep(random.random()*5+0.5)
-        if is_windows:
-            shell = True
-            cmd = f'python -m namer rename -c "{namer_config}" -f "{str(directory)}" -v'
-        else:
-            shell = False
-            cmd = [
+        cmd = [
             "python",
             "-m",
             "namer",
@@ -121,13 +110,13 @@ def run_namer_command(
             "-f",
             str(directory),
             "-v",
-            ]
+        ]
         process = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             check=False,
-            shell=shell,
+            shell=False,
         )
         print(process.stdout)
         print(process.stderr)
