@@ -104,12 +104,11 @@ def convert_pic_to_webp_multithreaded(
         quality (int): Quality of the WebP image. Default is 80.
     """
     folder = Path(folder_path)
-    pic_files = []
-    for ext in exts:
-        # Case-insensitive search
-        pic_files.extend(
-            list(folder.rglob(f"*{ext}")) + list(folder.rglob(f"*{ext.upper()}"))
-        )
+    # ⚡ Bolt Optimization: Use a single pass to find all matching files.
+    # Instead of traversing the entire directory tree 2*N times (once for lower, once for upper per extension),
+    # we traverse it once and check if the suffix matches in O(1) time using a set.
+    exts_lower = {ext.lower() for ext in exts}
+    pic_files = [p for p in folder.rglob("*") if p.is_file() and p.suffix.lower() in exts_lower]
 
     failed_count = {"count": 0, "lock": threading.Lock()}
 

@@ -1,0 +1,3 @@
+## 2024-05-19 - O(K*N) File Discovery Anti-pattern
+**Learning:** Found an anti-pattern in `convert_pic_to_webp.py` where the codebase was using multiple passes of `rglob` (2 passes per extension) to find files: `list(folder.rglob(f"*{ext}")) + list(folder.rglob(f"*{ext.upper()}"))`. For a directory with N files and K extensions, this leads to O(K*N) file system traversals, which is extremely slow on large directories or network drives.
+**Action:** Replace multiple `rglob` calls with a single `rglob("*")` pass and an in-memory O(1) set lookup for file extensions. This brings the time complexity down to O(N) and prevents matching directories that happen to have an extension in their name.
