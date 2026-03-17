@@ -70,7 +70,7 @@ def run_namer_command(
     try:
         # print(f"Detected OS: {platform.system()}")
         cmd = [
-            "python",
+            "python3",
             "-m",
             "namer",
             "rename",
@@ -101,7 +101,7 @@ def run_namer_command(
             print(f"NFO: Successfully match {directory} with nfo. Try the PornDB again.")
         time.sleep(random.random()*5+0.5)
         cmd = [
-            "python",
+            "python3",
             "-m",
             "namer",
             "rename",
