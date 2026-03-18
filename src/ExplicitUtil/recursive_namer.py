@@ -1,13 +1,23 @@
 from pathlib import Path
-import subprocess
 from typing import Union, Tuple
-import platform
 import random
 import asyncio
 import importlib.resources
 import time
+import sys
+import os
+
+# # Add the local namer package to sys.path
+# namer_path = Path(__file__).parent / "namer"
+# if namer_path.exists() and str(namer_path) not in sys.path:
+#     sys.path.insert(0, str(namer_path))
+
+from namer.namer import process_file, make_command
+from namer.configuration_utils import default_config
 
 __docformat__ = "google"
+
+
 def process_video_files(
     root_dir: Union[str, Path],
     namer_config: str,
@@ -28,16 +38,18 @@ def process_video_files(
         print(f"Error: Directory '{root_dir}' not found.")
         return
 
+    config = default_config(Path(namer_config))
+
     items = list(root_dir.rglob("*"))  # Use rglob to recursively find all files
     random.shuffle(items)
 
-    async def async_run_namer_command(item, namer_config, semaphore):
+    async def async_run_namer_command(item, config, semaphore):
         async with semaphore:
-            print(f"Processing file: {item}") # Moved this line here
+            print(f"Processing file: {item}")  # Moved this line here
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, run_namer_command, item, namer_config)
+            await loop.run_in_executor(None, run_namer_command, item, config)
 
-    async def process_all(items, suffix, endswith, namer_config):
+    async def process_all(items, suffix, endswith, config):
         semaphore = asyncio.Semaphore(2)  # Limit concurrency to 2
         tasks = []
         for item in items:
@@ -46,86 +58,52 @@ def process_video_files(
                 and (item.suffix.lower() in suffix)
                 and str(item.stem).lower().endswith(endswith)
             ):
-                tasks.append(async_run_namer_command(item, namer_config, semaphore))
+                tasks.append(async_run_namer_command(item, config, semaphore))
         await asyncio.gather(*tasks)
 
-    asyncio.run(process_all(items, suffix, endswith, namer_config))
+    asyncio.run(process_all(items, suffix, endswith, config))
     exit(0)
 
 
 def run_namer_command(
-    directory: Path, namer_config: str = ".namer.cfg"
+    directory: Path, config
 ) -> tuple[str | None, str, int]:
     """
-    Executes a shell command to process files in a directory.
+    Executes namer process to files in a directory.
     Tries to fetch from jellyfin generated nfo first. If fails, tries to rename using theporndb.net.
 
     Args:
         directory (Path): The directory to process.
-        namer_config (str): Path to the namer configuration file.
+        config: The namer configuration object.
 
     Returns:
         tuple: A tuple containing (stdout, stderr, returncode).
     """
     try:
-        # print(f"Detected OS: {platform.system()}")
-        cmd = [
-            "python3",
-            "-m",
-            "namer",
-            "rename",
-            "-c",
-            namer_config,
-            "-f",
-            str(directory),
-            "-i",
-            "-v",
-        ]
+        # print(f"Try loading from nfo. Processing file: {directory}")
+        # command = make_command(directory, config, nfo=True, inplace=True)
+        # if command:
+        #     result = process_file(command)
+        #     if result:
+        #         print(f"NFO: Successfully match {directory} with nfo.")
+        #         return "Success", "", 1
 
-        print(f"Try loading from nfo. Processing file: {directory}")
-        process = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=False,
-            shell=False,
-        )
-        stdout = process.stdout
-        stderr = process.stderr
-        returncode = process.returncode
-        print(stdout)
-        #print(returncode)
-        # if returncode==0:
-        #     print(f"NFO: Fail to match {directory} with nfo: {stderr}. Try the PornDB again.")
-        if returncode == 1:
-            print(f"NFO: Successfully match {directory} with nfo. Try the PornDB again.")
-        time.sleep(random.random()*5+0.5)
-        cmd = [
-            "python3",
-            "-m",
-            "namer",
-            "rename",
-            "-c",
-            namer_config,
-            "-f",
-            str(directory),
-            "-v",
-        ]
-        process = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=False,
-            shell=False,
-        )
-        print(process.stdout)
-        print(process.stderr)
-        #print(process.returncode)
-        if process.returncode == 1:
-            print(f"PornDB: ✅ Successfully match {directory} with PornDB metadata.")
+        # time.sleep(random.random() * 5 + 0.5)
+
+        print(f"Try loading from PornDB. Processing file: {directory}")
+        command = make_command(directory, config, nfo=False, inplace=True)
+        if command:
+            result = process_file(command)
+            if result:
+                print(f"PornDB: ✅ Successfully match {directory} with PornDB metadata.")
+                return "Success", "", 1
+            else:
+                print(f"PornDB: Failed to match {directory} with PornDB metadata")
+                return "", "Failed to match", 0
         else:
-            print(f"PornDB: Failed to match {directory} with PornDB metadata")
-        return stdout, stderr, returncode
+            print(f"PornDB: Failed to create command for {directory}")
+            return "", "Failed to create command", -1
+
     except Exception as e:
         print(f"Exception occurred while processing {directory}: {e}")
         return None, str(e), -1
