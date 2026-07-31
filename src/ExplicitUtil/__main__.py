@@ -4,7 +4,7 @@ from pathlib import Path
 import asyncio
 import toml
 import importlib.resources
-from .convert_pic_to_webp import convert_pic_to_webp_multithreaded
+from .convert_pic_to_webp import convert_pic_to_webp_multithreaded, convert_pics_in_zips
 from .nfo_tool import generate_nfo, batch_add_tag, batch_add_actor, batch_add_studio
 from .recursive_namer import process_video_files
 from .recursive_unzip import recursive_unzip
@@ -62,6 +62,12 @@ def convert_pic(
         None, help="Timeout in seconds (default: 10)"
     ),
     quality: Optional[int] = typer.Option(None, help="WebP quality (default: 80)"),
+    include_zips: bool = typer.Option(
+        False,
+        "--include-zips",
+        "-z",
+        help="Also convert images inside zip files (overwrites the zip in-place)",
+    ),
     save: bool = typer.Option(False, "--save", help="Save these settings to config"),
 ):
     """Convert images to WebP format. Uses stored config by default."""
@@ -83,6 +89,14 @@ def convert_pic(
             timeout=settings["timeout"],
             quality=settings["quality"],
         )
+
+        if include_zips:
+            convert_pics_in_zips(
+                folder_path=str(folder_path),
+                num_threads=settings["num_threads"],
+                timeout=settings["timeout"],
+                quality=settings["quality"],
+            )
     except Exception as e:
         typer.echo(f"Error converting files: {e}", err=True)
 
